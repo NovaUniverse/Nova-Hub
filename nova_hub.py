@@ -1,14 +1,16 @@
 import os
 from tkinter import *
 from tkinter import ttk
-from ttkthemes import themed_tk as tk
+#from ttkthemes import themed_tk as tk
 from tkinter.ttk import Progressbar
+from PIL import ImageTk, Image
 import threading
 import time
 import subprocess
+from colour import Color
+import webbrowser
 
 import settings
-import run
 
 app_name = settings.app_name
 
@@ -16,7 +18,7 @@ ver_v = "V" + str(settings.version)
 
 live_installer_status = "Starting Live Install Status Thread..."
 
-lrs = False
+lrs = False #Turns Live Status Thread off.
 
 def live_run_status(): #Updates
     global live_installer_status
@@ -51,11 +53,64 @@ def live_run_status(): #Updates
 t2=threading.Thread(target=live_run_status)
 t2.setDaemon(True)
 
+'''
 t3=threading.Thread(target=run.run) #Run thread.
 t3.setDaemon(True)
 
 t4=threading.Thread(target=run.run, args=(["RESTORE_FORGE"])) #Restore Forge Run thread.
 t4.setDaemon(True)
+'''
+
+def nav_bar():
+    nav_bar = Frame(main_frame, width=window.winfo_width(), height=window.winfo_height() / 18, bg="#3D0000") #NavBar
+    nav_bar.pack(side="top", fill=BOTH)
+
+    Nova_Logo = Image.open("images/Nova-Universe.png")
+    width, height = Nova_Logo.size
+    
+    actual_width = round(int(width)/11)
+    actual_height = round(int(height)/11)
+
+    Nova_Logo_0 = Nova_Logo.resize((actual_width, actual_height))
+    tkimage = ImageTk.PhotoImage(Nova_Logo_0)
+    nova_logo_label = Label(nav_bar, image=tkimage, bg="#3D0000", cursor="hand2")
+    nova_logo_label.photo = tkimage
+    nova_logo_label.pack()
+    nova_logo_label.bind("<Button-1>", open_url)
+
+    t6=threading.Thread(target=logo_brething_effect, args=([Nova_Logo, Nova_Logo_0, nova_logo_label, actual_width, actual_height]))
+    t6.setDaemon(True)
+    t6.start()
+
+    buttons_bar = Frame(nav_bar, width=10, height=30, bg="#9F1F0F") #NavBar
+    buttons_bar.pack(side="top", fill=BOTH)
+
+    home_button = Button(buttons_bar, text="Home", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2") 
+    home_button.grid(row=0, column=1, padx=15)
+    home_button.bind("<Enter>", button_hover_enter)
+    home_button.bind("<Leave>", button_hover_leave)
+
+    installs_button = Button(buttons_bar, text="Installations", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2", command=installations_menu)
+    installs_button.grid(row=0, column=2)
+    installs_button.bind("<Enter>", button_hover_enter)
+    installs_button.bind("<Leave>", button_hover_leave)
+
+def installations_menu():
+    installations_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
+    installations_frame.pack(fill=BOTH, expand=1)
+
+    amount_of_installers = 0
+    for installer in os.listdir("installers/"):
+        print (installer)
+        modpack_frame = Frame(installations_frame, width=200, height=200, bg="#282727") #Main App Frame
+        modpack_frame.grid(row=0 + amount_of_installers, column=1 + amount_of_installers, padx=15, pady=15)
+
+        modpack_title = Label(modpack_frame, text=installer, font=("Arial Bold", 10))
+        #modpack_title.pack()
+
+        amount_of_installers =+ 1
 
 def home_menu():
     global ver_label
@@ -65,18 +120,10 @@ def home_menu():
     global restore_forge_button
     global border
 
-    Terra_text = Label(main_frame, text="Terra SMP ModPack Installer", font=("Arial Bold", 40), fg="#E1D8D8", bg="#171717")
-    Terra_text.config(anchor=CENTER)
-    Terra_text.pack()
+    home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
+    home_frame.pack(fill=BOTH, expand=1)
 
-    Terra_slowgon = Label(main_frame, text="[placeholder for description].", font=("Arial Bold", 15), fg="#E1D8D8", pady=12, bg="#171717")
-    Terra_slowgon.config(anchor=CENTER)
-    Terra_slowgon.pack()
-
-    install_button = Button(main_frame, text="Install!", font=("Arial Bold", 30), padx=20, pady=2, fg="#E1D8D8", bg="#8A0004", 	
-    activebackground="#13472D", command=install)
-    install_button.pack(expand=0.1)
-
+    
     #Bottom Hud Frame
     border = Frame(main_canvas, width=600, height=30, bg="#3D0000")
     border.pack(fill=BOTH)
@@ -109,6 +156,105 @@ def finish():
     sys.exit()
 
 t5=threading.Thread(target=finish)
+
+def button_hover_enter(e):
+    hex_colour = Color("#1F1E1E")
+    colours = list(hex_colour.range_to(Color("#C06565"),10))
+    
+    t7=threading.Thread(target=color_glow_effect, args=([e, colours]))
+    t7.setDaemon(True)
+    t7.start()
+
+def button_hover_leave(e):
+    hex_colour = Color("#C06565")
+    colours = list(hex_colour.range_to(Color("#1F1E1E"),10))
+
+    t7=threading.Thread(target=color_glow_effect, args=([e, colours]))
+    t7.setDaemon(True)
+    t7.start()
+
+def color_glow_effect(e, hex_list):
+    for color in hex_list:
+        time.sleep(0.01)
+        print(color)
+        e.widget['background'] = '{}'.format(color)
+
+def logo_brething_effect(Nova_Logo, Nova_Logo_0, logo_label, actual_width, actual_height):
+    logo_size_1 = Nova_Logo.resize((actual_width, actual_height))
+    size = 1.001
+    logo_size_2 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.002
+    logo_size_3 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.003
+    logo_size_4 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.004
+    logo_size_5 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.005
+    logo_size_6 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.006
+    logo_size_7 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.007
+    logo_size_8 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.008
+    logo_size_9 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.009
+    logo_size_10 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.010
+    logo_size_11 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.011
+    logo_size_12 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.012
+    logo_size_13 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.013
+    logo_size_14 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.014
+    logo_size_15 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.015
+    logo_size_16 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.016
+    logo_size_17 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.017
+    logo_size_18 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.018
+    logo_size_19 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.019
+    logo_size_20 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.020
+    logo_size_21 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.021
+    logo_size_22 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.022
+    logo_size_23 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.023
+    logo_size_24 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.024
+    logo_size_25 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+
+    sizes_list_2 = [Nova_Logo_0, logo_size_1, logo_size_2, logo_size_3, logo_size_4, logo_size_5, logo_size_6, logo_size_7, logo_size_8, logo_size_9,
+    logo_size_10, logo_size_11, logo_size_12, logo_size_13, logo_size_14, logo_size_15, logo_size_16, logo_size_17, logo_size_18, logo_size_19, logo_size_20, logo_size_21,
+    logo_size_22, logo_size_23, logo_size_24, logo_size_25] + [logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, 
+    logo_size_25, logo_size_25, logo_size_25]
+
+    sizes_list_2.reverse()
+
+    sizes_list = [Nova_Logo_0, logo_size_1, logo_size_2, logo_size_3, logo_size_4, logo_size_5, logo_size_6, logo_size_7, logo_size_8, logo_size_9,
+    logo_size_10, logo_size_11, logo_size_12, logo_size_13, logo_size_14, logo_size_15, logo_size_16, logo_size_17, logo_size_18, logo_size_19, logo_size_20, logo_size_21,
+    logo_size_22, logo_size_23, logo_size_24, logo_size_25] + [logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, logo_size_25, 
+    logo_size_25, logo_size_25, logo_size_25] + sizes_list_2
+
+    while True:
+
+        for logo in sizes_list:
+            time.sleep(0.03)
+            tkimage = ImageTk.PhotoImage(logo)
+            logo_label.config(image=tkimage)
+            logo_label.photo = tkimage
+
+def open_url(url=None):
+    if not type(url) == type(""):
+        url = settings.nova_universe_url
+
+    webbrowser.open_new_tab(url)
 
 def install():
     Terra_text.pack_forget()
@@ -163,7 +309,8 @@ def app_close():
 
 def start_up():
     #Normal Start Up
-    home_menu() #Loads Home Page
+    nav_bar() #Loads Nav Bar
+    #home_menu() #Loads Home Page
 
 t1=threading.Thread(target=start_up)
 
@@ -177,10 +324,12 @@ main_frame.pack(fill=BOTH, expand=1)
 
 window.title(app_name)
 
-window.geometry('800x500')
+window.geometry('900x600')
 #window.resizable(False, False) #Makes window not resizeable
 
 window.protocol("WM_DELETE_WINDOW", app_close)
+
+start_up() #App startup runs within this function!
 
 window.mainloop()
 
@@ -213,4 +362,4 @@ news_list = {
 }
 
 if __name__ == '__main__':
-    start_up() #App startup runs within this function!
+    pass

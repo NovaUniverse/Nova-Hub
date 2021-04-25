@@ -2,8 +2,9 @@ import os
 
 version = 1.00
 development_stage = "DEV"
-app_name = "TERRA SMP MODPACK INSTALLER V{} ({})".format(version, development_stage)
+app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
+nova_universe_url = "https://www.youtube.com/c/TheGoldenPro"
 modpack_zip_url = "https://www.dropbox.com/s/f3ybyvif1cjf5wf/Example.zip?dl=1"
 forge_zip_url = "https://www.dropbox.com/s/shbzdkm9u01jz60/1.12.2-forge-14.23.5.2854.zip?dl=1"
 
