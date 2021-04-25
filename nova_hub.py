@@ -107,7 +107,7 @@ def installations_menu():
         modpack_frame = Frame(installations_frame, width=200, height=200, bg="#282727") #Main App Frame
         modpack_frame.grid(row=0 + amount_of_installers, column=1 + amount_of_installers, padx=15, pady=15)
 
-        modpack_title = Label(modpack_frame, text=installer, font=("Arial Bold", 10))
+        modpack_title = Label(modpack_frame, text=installer, font=("Arial Bold", 10)) #Where I left off
         #modpack_title.pack()
 
         amount_of_installers =+ 1
