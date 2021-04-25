@@ -1,0 +1,120 @@
+#:import rgba kivy.utils.get_color_from_hex
+
+<Home>
+    cols:1
+    pos: self.pos
+    size: root.width, root.height
+
+    FloatLayout: #Nav Bar
+        cols: 8
+        size: root.width, root.height/8
+        pos: root.width/root.width, (root.height) - (root.height)/8
+        #pos: root.width/9000, root.height/1.2
+
+        canvas.before:
+            Color:
+                rgba: (61/255, 0/255, 0/255, 1)
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        
+        Button:
+            id:home_nav_button
+            text: "Home"
+            font_size: 20
+
+            size_hint: 0.08, 0.4
+            min_hint: 0.2, 0.5
+            pos_hint: {"x":0.01, "top":0.70}
+
+            background_color: rgba("#282727")
+
+        Button:
+            id:installations_nav_button
+            text: "Installations"
+            font_size: 20
+
+            size_hint: 0.15, 0.4
+            min_hint: 0.3, 0.5
+            pos_hint: {"x":0.11, "top":0.70}
+
+            background_color: rgba("#282727")
+
+        
+        Image:
+            source: "images/Nova-Universe.png"
+            allow_stretch: True
+            keep_ratio: True
+
+            pos_hint: {"center_y":0.5}
+
+    
+
+    BoxLayout:
+        orientation: "vertical"
+
+        canvas.before:
+            Color:
+                rgba: (23/255, 23/255, 23/255, 1)
+            Rectangle:
+                size: self.size
+
+        size: root.width, root.height/1.14
+
+        spacing: 20
+
+        Label:
+            text: "Title 1"
+            background_color: (159/255, 31/255, 15/255, 1)
+
+        Label:
+            text: "Des"
+            background_color: (40/255, 39/255, 39/255, 1)
+
+        Label:
+            text: "Title 2"
+            background_color: (159/255, 31/255, 15/255, 1)
+            
+        Label:
+            text: "Des"
+            background_color: (40/255, 39/255, 39/255, 1)
+
+        Label:
+            text: "Title 3"
+            background_color: (159/255, 31/255, 15/255, 1)
+            
+
+
+    ScrollView:
+        size: root.width, root.height/1.14
+        GridLayout: #Boxes
+            size_hint_y: None
+
+            cols: 1
+            rows: 5
+            row_default_height: '300dp'
+            #row_force_default: True
+
+            padding: 20
+
+            size: root.width, root.height/1.14
+
+            canvas:
+                Color:
+                    rgba: (159/255, 31/255, 15/255, 1)
+                Rectangle:
+                    pos: self.width/20, (self.height) - (self.height)/3.506
+                    size: self.width/1.11, self.height/20
+
+            Label:
+                canvas:
+                    Color:
+                        rgba: (40/255, 39/255, 39/255, 1)
+                    Rectangle:
+                        size: root.width/1.11, root.height/5
+                        pos: root.width/20, (root.height) - (root.height)/1.558
+                    
+            
+
+#2nd Colour: (61, 0, 0, 1)
+            
