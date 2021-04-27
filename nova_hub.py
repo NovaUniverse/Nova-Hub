@@ -63,6 +63,9 @@ t4.setDaemon(True)
 '''
 
 def nav_bar():
+    global installations_menu
+    global home_frame
+
     nav_bar = Frame(main_frame, width=window.winfo_width(), height=window.winfo_height() / 18, bg="#3D0000") #NavBar
     nav_bar.pack(side="top", fill=BOTH)
 
@@ -89,23 +92,32 @@ def nav_bar():
     buttons_bar.pack(side="top", fill=BOTH)
 
     home_button = Button(buttons_bar, text="Home", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2") 
+    cursor="hand2", command=lambda: home_menu(home_button, installations_frame)) 
     home_button.grid(row=0, column=1, padx=15)
     home_button.bind("<Enter>", button_hover_enter)
     home_button.bind("<Leave>", button_hover_leave)
 
+    home_menu(home_button, None)
+
     installs_button = Button(buttons_bar, text="Installations", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2", command=lambda: installations_menu(installs_button))
+    cursor="hand2", command=lambda: installations_menu(installs_button, home_frame))
     installs_button.grid(row=0, column=2)
     installs_button.bind("<Enter>", button_hover_enter)
     installs_button.bind("<Leave>", button_hover_leave)
 
-def installations_menu(button_used):
-    global modpack_frame
+    settings.button_list = [home_button, installs_button]
+
+def installations_menu(button_used, previous_frame):
+    global installations_frame
+
+    reset_clickable(settings.button_list)
 
     make_unclickable(button_used)
     button_used.bind("<Enter>", button_hover_enter)
     button_used.bind("<Leave>", button_hover_leave)
+
+    if not previous_frame == None:
+        previous_frame.pack_forget()
 
     installations_frame = Frame(main_frame, width=1280, height=720, bg="#171717")
     installations_frame.pack(fill=BOTH, expand=1)
@@ -117,14 +129,20 @@ def installations_menu(button_used):
         for colour in hex_list:
             time.sleep(0.01)
             modpack_frame.config(bg="{}".format(colour)) #Frame
-            e.widget['background'] = '{}'.format(colour) #Button
+            try:
+                e.widget['background'] = '{}'.format(colour) #Button
+                e.widget['activebackground'] = '{}'.format(colour)
+            except AttributeError as error:
+                e.config(bg="{}".format(colour))
+                e.config(activebackground="{}".format(colour))
+            
             modpack_title.config(bg="{}".format(colour)) #Title
             pack_image_frame.config(bg="{}".format(colour)) #Image
         
         for colour in hex_list_text:
             modpack_title.config(fg="{}".format(colour))
 
-    def install_button_hover_enter(e):
+    def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title):
         hex_colour = Color("#282727")
         colours = list(hex_colour.range_to(Color("#C06565"), 12))
 
@@ -135,7 +153,7 @@ def installations_menu(button_used):
         t8.setDaemon(True)
         t8.start()
 
-    def install_button_hover_leave(e):
+    def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title):
         hex_colour = Color("#C06565")
         colours = list(hex_colour.range_to(Color("#282727"), 20))
 
@@ -143,6 +161,18 @@ def installations_menu(button_used):
         colours_text = list(hex_colour.range_to(Color("#C52612"), 20))
         
         t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
+    def install(modpack_frame, installs_button, pack_image_frame, modpack_title):
+        #Install Effect
+        hex_colour = Color("#C06565")
+        colours = list(hex_colour.range_to(Color("#00C03E"), 40))
+
+        hex_colour = Color("#C52612") #Text
+        colours_text = list(hex_colour.range_to(Color("black"), 12))
+        
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
@@ -171,11 +201,11 @@ def installations_menu(button_used):
         pack_image_frame.photo = tkimage
         pack_image_frame.place(x=0, y=0)
  
-        modpack_title_font = font.Font(family='Calibri', size=15, weight='bold', underline=False)
+        modpack_title_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
         modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
         modpack_title.place(x=0, y=135)
 
-        install_image = Image.open(settings.path_to_images + "nova_hub_green_button.png")
+        install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
 
         width, height = install_image.size
         
@@ -184,38 +214,33 @@ def installations_menu(button_used):
 
         install_image = install_image.resize((actual_width, actual_height))
         tkimage = ImageTk.PhotoImage(install_image)
-        installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#FEBCBC", borderwidth=0, 
+        installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
         cursor="hand2")
+        installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, modpack_title=modpack_title : 
+        install(modpack_frame, installs_button, pack_image_frame, modpack_title))
         installs_button.photo = tkimage
         installs_button.place(x=53, y=180)
-        installs_button.bind("<Enter>", install_button_hover_enter)
-        installs_button.bind("<Leave>", install_button_hover_leave)
+        installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+        modpack_title=modpack_title: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title))
+        installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+        modpack_title=modpack_title: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title))
 
         amount_of_installers =+ 1
 
-def home_menu():
-    global ver_label
-    global Terra_text
-    global Terra_slowgon
-    global install_button
-    global restore_forge_button
-    global border
+def home_menu(button_used, previous_frame):
+    global home_frame
+
+    reset_clickable(settings.button_list)
+
+    make_unclickable(button_used)
+    button_used.bind("<Enter>", button_hover_enter)
+    button_used.bind("<Leave>", button_hover_leave)
+
+    if not previous_frame == None:
+        previous_frame.pack_forget()
 
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
-
-    
-    #Bottom Hud Frame
-    border = Frame(main_canvas, width=600, height=30, bg="#3D0000")
-    border.pack(fill=BOTH)
-
-    restore_forge_button = Button(border, text="Restore Forge", font=("Arial Bold", 12), padx=5, pady=1, fg="#E1D8D8", bg="#110000", 	
-    activebackground="#13472D", command=restore_forge)
-    restore_forge_button.pack(side=RIGHT)
-
-    ver_label = Label(border, text=ver_v, font=("Arial Bold", 16), padx=6, pady=0, fg="#E1D8D8", bg="#3D0000")
-    ver_label.config()
-    ver_label.pack(side=LEFT)
 
 def finish():
     global t4
@@ -259,6 +284,11 @@ def make_unclickable(button):
         button["state"] = "disabled"
     else:
         button["state"] = "normal"
+
+def reset_clickable(button_list):
+    for button in button_list:
+        button["state"] = "normal"
+
 
 def color_glow_effect(e, hex_list):
 
@@ -381,11 +411,7 @@ def open_url(url=None):
 
     webbrowser.open_new_tab(url)
 
-def install():
-    Terra_text.pack_forget()
-    Terra_slowgon.pack_forget()
-    install_button.pack_forget()
-    restore_forge_button.pack_forget()
+def installf():
     
     t2.start() #Start live installer status thread.
 
@@ -395,11 +421,6 @@ def install():
 
 def restore_forge():
     global t4
-
-    Terra_text.pack_forget()
-    Terra_slowgon.pack_forget()
-    install_button.pack_forget()
-    restore_forge_button.pack_forget()
 
     t2.start() #Start live installer status thread.
 
@@ -435,7 +456,6 @@ def app_close():
 def start_up():
     #Normal Start Up
     nav_bar() #Loads Nav Bar
-    #home_menu() #Loads Home Page
 
 t1=threading.Thread(target=start_up)
 
