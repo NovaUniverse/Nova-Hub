@@ -452,23 +452,6 @@ def open_url(url=None):
 
     webbrowser.open_new_tab(url)
 
-def installf():
-    
-    t2.start() #Start live installer status thread.
-
-    t3.start() #Start run thread.
-
-    t5.start() #Finish Thread
-
-def restore_forge():
-    global t4
-
-    t2.start() #Start live installer status thread.
-
-    t4.start() #Start restore forge run thread.
-
-    t5.start() #Finish Thread
-
 def app_close():
     global lrs
     print ("\u001b[36m[Protocal Close App]")
