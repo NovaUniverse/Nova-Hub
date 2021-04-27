@@ -3,7 +3,8 @@ from tkinter import *
 from tkinter import ttk
 #from ttkthemes import themed_tk as tk
 from tkinter.ttk import Progressbar
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFilter
+import tkinter.font as font
 import threading
 import time
 import subprocess
@@ -71,6 +72,8 @@ def nav_bar():
     actual_width = round(int(width)/11)
     actual_height = round(int(height)/11)
 
+    #Nova_Logo = add_image_shadow(Nova_Logo, 50, 0, [10, 10], "#3D0000", "black")
+
     Nova_Logo_0 = Nova_Logo.resize((actual_width, actual_height))
     tkimage = ImageTk.PhotoImage(Nova_Logo_0)
     nova_logo_label = Label(nav_bar, image=tkimage, bg="#3D0000", cursor="hand2")
@@ -92,23 +95,101 @@ def nav_bar():
     home_button.bind("<Leave>", button_hover_leave)
 
     installs_button = Button(buttons_bar, text="Installations", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2", command=installations_menu)
+    cursor="hand2", command=lambda: installations_menu(installs_button))
     installs_button.grid(row=0, column=2)
     installs_button.bind("<Enter>", button_hover_enter)
     installs_button.bind("<Leave>", button_hover_leave)
 
-def installations_menu():
-    installations_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
+def installations_menu(button_used):
+    global modpack_frame
+
+    make_unclickable(button_used)
+    button_used.bind("<Enter>", button_hover_enter)
+    button_used.bind("<Leave>", button_hover_leave)
+
+    installations_frame = Frame(main_frame, width=1280, height=720, bg="#171717")
     installations_frame.pack(fill=BOTH, expand=1)
 
     amount_of_installers = 0
-    for installer in os.listdir("installers/"):
-        print (installer)
-        modpack_frame = Frame(installations_frame, width=200, height=200, bg="#282727") #Main App Frame
-        modpack_frame.grid(row=0 + amount_of_installers, column=1 + amount_of_installers, padx=15, pady=15)
 
-        modpack_title = Label(modpack_frame, text=installer, font=("Arial Bold", 10)) #Where I left off
-        #modpack_title.pack()
+    def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, hex_list, hex_list_text):
+
+        for colour in hex_list:
+            time.sleep(0.01)
+            modpack_frame.config(bg="{}".format(colour)) #Frame
+            e.widget['background'] = '{}'.format(colour) #Button
+            modpack_title.config(bg="{}".format(colour)) #Title
+            pack_image_frame.config(bg="{}".format(colour)) #Image
+        
+        for colour in hex_list_text:
+            modpack_title.config(fg="{}".format(colour))
+
+    def install_button_hover_enter(e):
+        hex_colour = Color("#282727")
+        colours = list(hex_colour.range_to(Color("#C06565"), 12))
+
+        hex_colour = Color("#C52612") #Text
+        colours_text = list(hex_colour.range_to(Color("black"), 12))
+        
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
+    def install_button_hover_leave(e):
+        hex_colour = Color("#C06565")
+        colours = list(hex_colour.range_to(Color("#282727"), 20))
+
+        hex_colour = Color("black") #Text
+        colours_text = list(hex_colour.range_to(Color("#C52612"), 20))
+        
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
+    for installer in os.listdir(settings.path_to_installers):
+        print (installer)
+
+        modpack_frame = Frame(installations_frame, width=240, height=250, bg="#282727")
+        modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
+
+        try:
+            Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\fbanner.png")
+        except FileNotFoundError as e:
+            try:
+                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.jpeg")
+            except Exception as e:
+                Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
+
+        width, height = Pack_Image.size
+        
+        actual_width = round(int(width)/8.12)
+        actual_height = round(int(height)/8.12)
+
+        Pack_Image = Pack_Image.resize((actual_width, actual_height))
+        tkimage = ImageTk.PhotoImage(Pack_Image)
+        pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727")
+        pack_image_frame.photo = tkimage
+        pack_image_frame.place(x=0, y=0)
+ 
+        modpack_title_font = font.Font(family='Calibri', size=15, weight='bold', underline=False)
+        modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
+        modpack_title.place(x=0, y=135)
+
+        install_image = Image.open(settings.path_to_images + "nova_hub_green_button.png")
+
+        width, height = install_image.size
+        
+        actual_width = round(int(width)/14)
+        actual_height = round(int(height)/14)
+
+        install_image = install_image.resize((actual_width, actual_height))
+        tkimage = ImageTk.PhotoImage(install_image)
+        installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2")
+        installs_button.photo = tkimage
+        installs_button.place(x=53, y=180)
+        installs_button.bind("<Enter>", install_button_hover_enter)
+        installs_button.bind("<Leave>", install_button_hover_leave)
 
         amount_of_installers =+ 1
 
@@ -173,11 +254,55 @@ def button_hover_leave(e):
     t7.setDaemon(True)
     t7.start()
 
+def make_unclickable(button):
+    if button["state"] == "normal":
+        button["state"] = "disabled"
+    else:
+        button["state"] = "normal"
+
 def color_glow_effect(e, hex_list):
+
     for color in hex_list:
         time.sleep(0.01)
-        print(color)
         e.widget['background'] = '{}'.format(color)
+
+def make_sound(sound):
+    pass
+
+def add_image_shadow(image, iterations, border, offset, backgroundColour, shadowColour):
+    # image: base image to give a drop shadow
+    # iterations: number of times to apply the blur filter to the shadow
+    # border: border to give the image to leave space for the shadow
+    # offset: offset of the shadow as [x,y]
+    # backgroundCOlour: colour of the background
+    # shadowColour: colour of the drop shadow
+    
+    #Calculate the size of the shadow's image
+    fullWidth  = image.size[0] + abs(offset[0]) + 2*border
+    fullHeight = image.size[1] + abs(offset[1]) + 2*border
+    
+    #Create the shadow's image. Match the parent image's mode.
+    shadow = Image.new(image.mode, (fullWidth, fullHeight), backgroundColour)
+    
+    # Place the shadow, with the required offset
+    shadowLeft = border + max(offset[0], 0) #if <0, push the rest of the image right
+    shadowTop  = border + max(offset[1], 0) #if <0, push the rest of the image down
+    #Paste in the constant colour
+    shadow.paste(shadowColour, 
+                [shadowLeft, shadowTop,
+                 shadowLeft + image.size[0],
+                 shadowTop  + image.size[1] ])
+    
+    # Apply the BLUR filter repeatedly
+    for i in range(iterations):
+        shadow = shadow.filter(ImageFilter.BLUR)
+
+    # Paste the original image on top of the shadow 
+    imgLeft = border - min(offset[0], 0) #if the shadow offset was <0, push right
+    imgTop  = border - min(offset[1], 0) #if the shadow offset was <0, push down
+    shadow.paste(image, (imgLeft, imgTop))
+
+    return shadow
 
 def logo_brething_effect(Nova_Logo, Nova_Logo_0, logo_label, actual_width, actual_height):
     logo_size_1 = Nova_Logo.resize((actual_width, actual_height))
