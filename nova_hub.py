@@ -17,42 +17,38 @@ app_name = settings.app_name
 
 ver_v = "V" + str(settings.version)
 
+lrs = False #Turns Live Status Thread off.
 live_installer_status = "Starting Live Install Status Thread..."
 
-lrs = False #Turns Live Status Thread off.
-
-def live_run_status(): #Updates
+def live_run_status(run, modpack_frame): #Updates
     global live_installer_status
     global lrs
+    global progress
+    global live_status_text
 
     lrs = True
+
+    live_status_text = Label(main_frame, text=live_installer_status, font=("Arial Rounded MT Bold", 20), fg="#E1D8D8", 
+    pady=12, bg="#171717", wraplength=780)
+    live_status_text.config(anchor=CENTER)
+    live_status_text.pack()
+
+    s = ttk.Style() #Apply Theme
+    s.theme_use('clam')
+    s.configure("terra.Horizontal.TProgressbar", foreground='#C06565', background='#9F1F0F')
+
+    progress = Progressbar(main_frame, style="terra.Horizontal.TProgressbar", orient=HORIZONTAL, length=600, mode='determinate')
+    progress['value'] = run.live_installer_progress_bar
+    progress.pack(pady=10)
     
     while lrs == True:
         live_installer_status = run.live_installer_status
 
-        live_status_text = Label(main_frame, text=live_installer_status, font=("Arial Bold", 20), fg="#E1D8D8", 
-        pady=12, bg="#171717", wraplength=780)
-        live_status_text.config(anchor=CENTER)
-        live_status_text.pack()
+        live_status_text.config(text=live_installer_status)
 
-        s = ttk.Style() #Apply Theme
-        s.theme_use('clam')
-        s.configure("terra.Horizontal.TProgressbar", foreground='#E1D8D8', background='#FF0000')
-
-        progress = Progressbar(main_frame, style="terra.Horizontal.TProgressbar", orient=HORIZONTAL, length=600, mode='determinate')
         progress['value'] = run.live_installer_progress_bar
-        progress.pack()
 
         time.sleep(0.06)
-        
-        progress.pack_forget()
-        live_status_text.pack_forget()
-
-        if lrs == False:
-            sys.exit()
-
-t2=threading.Thread(target=live_run_status)
-t2.setDaemon(True)
 
 '''
 t3=threading.Thread(target=run.run) #Run thread.
@@ -109,6 +105,8 @@ def nav_bar():
 
 def installations_menu(button_used, previous_frame):
     global installations_frame
+    global progress
+    global live_status_text
 
     reset_clickable(settings.button_list)
 
@@ -164,7 +162,40 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
-    def install(modpack_frame, installs_button, pack_image_frame, modpack_title):
+    def install(modpack_frame, installs_button, pack_image_frame, modpack_title, run, run_option):
+        def finish_effect():
+            time.sleep(2)
+            
+            progress.pack_forget()
+            live_status_text.pack_forget()
+
+            hex_colour = Color("#C06565")
+            colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
+
+            hex_colour = Color("#C52612") #Text
+            colours_text = list(hex_colour.range_to(Color("black"), 12))
+            
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, colours, colours_text]))
+            t8.setDaemon(True)
+            t8.start()
+
+            launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+
+            width, height = launch_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
+
+            launch_image = launch_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(launch_image)
+            launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+            cursor="hand2")
+            launch_button.config()
+            launch_button.photo = tkimage
+
+            t8.join()
+            launch_button.place(x=53, y=180)
+
         #Install Effect
         hex_colour = Color("#C06565")
         colours = list(hex_colour.range_to(Color("#00C03E"), 40))
@@ -176,56 +207,75 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
+        #Threads needed for install.
+        t3=threading.Thread(target=run.run, args=([run_option])) #Run Installer thread.
+        t3.setDaemon(True)
+        t3.start()
+
+        t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
+        t2.setDaemon(True)
+        t2.start()
+
+        t5=threading.Thread(target=finish, args=([t3])) #Finish Install
+        t5.setDaemon(True)
+        t5.start()
+
+        t9=threading.Thread(target=finish_effect)
+        t9.setDaemon(True)
+        t9.start()
+
     for installer in os.listdir(settings.path_to_installers):
-        print (installer)
+        if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
+            print (installer)
+            from installers.Terra_Smp import run
 
-        modpack_frame = Frame(installations_frame, width=240, height=250, bg="#282727")
-        modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
+            modpack_frame = Frame(installations_frame, width=240, height=250, bg="#282727")
+            modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
 
-        try:
-            Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\fbanner.png")
-        except FileNotFoundError as e:
             try:
-                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.jpeg")
-            except Exception as e:
-                Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
+                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\fbanner.png") #Remove "f" in production version.
+            except FileNotFoundError as e:
+                try:
+                    Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.jpeg")
+                except Exception as e:
+                    Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
 
-        width, height = Pack_Image.size
-        
-        actual_width = round(int(width)/8.12)
-        actual_height = round(int(height)/8.12)
+            width, height = Pack_Image.size
+            
+            actual_width = round(int(width)/8.12)
+            actual_height = round(int(height)/8.12)
 
-        Pack_Image = Pack_Image.resize((actual_width, actual_height))
-        tkimage = ImageTk.PhotoImage(Pack_Image)
-        pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727")
-        pack_image_frame.photo = tkimage
-        pack_image_frame.place(x=0, y=0)
- 
-        modpack_title_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-        modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
-        modpack_title.place(x=0, y=135)
+            Pack_Image = Pack_Image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(Pack_Image)
+            pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727")
+            pack_image_frame.photo = tkimage
+            pack_image_frame.place(x=0, y=0)
+    
+            modpack_title_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+            modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
+            modpack_title.place(x=0, y=135)
 
-        install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
+            install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
 
-        width, height = install_image.size
-        
-        actual_width = round(int(width)/14)
-        actual_height = round(int(height)/14)
+            width, height = install_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
 
-        install_image = install_image.resize((actual_width, actual_height))
-        tkimage = ImageTk.PhotoImage(install_image)
-        installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
-        cursor="hand2")
-        installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, modpack_title=modpack_title : 
-        install(modpack_frame, installs_button, pack_image_frame, modpack_title))
-        installs_button.photo = tkimage
-        installs_button.place(x=53, y=180)
-        installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-        modpack_title=modpack_title: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title))
-        installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-        modpack_title=modpack_title: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title))
+            install_image = install_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(install_image)
+            installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
+            cursor="hand2")
+            installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, modpack_title=modpack_title, run=run, run_option="NORMAL" : 
+            install(modpack_frame, installs_button, pack_image_frame, modpack_title, run, "NORMAL"))
+            installs_button.photo = tkimage
+            installs_button.place(x=53, y=180)
+            installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+            modpack_title=modpack_title: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title))
+            installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+            modpack_title=modpack_title: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title))
 
-        amount_of_installers =+ 1
+            amount_of_installers =+ 1
 
 def home_menu(button_used, previous_frame):
     global home_frame
@@ -242,26 +292,17 @@ def home_menu(button_used, previous_frame):
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
 
-def finish():
-    global t4
+def finish(thread_to_wait_for):
 
-    try:
-        t3.join()
-        open_mc_launcher = True
-    except RuntimeError as e:
-        open_mc_launcher = False
-        t4.join()
+    thread_to_wait_for.join()
+    open_mc_launcher = True
 
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
     close_button = Button(main_frame, text="Close!", font=("Arial Bold", 12), padx=5, pady=1, fg="#E1D8D8", bg="#8A0004", 	
     activebackground="#13472D", command=app_close)   
-    close_button.pack(side=BOTTOM)
-
-    sys.exit()
-
-t5=threading.Thread(target=finish)
+    #close_button.pack(side=BOTTOM)
 
 def button_hover_enter(e):
     hex_colour = Color("#1F1E1E")
