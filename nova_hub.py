@@ -492,6 +492,7 @@ main_frame = Frame(main_canvas, width=1280, height=720, bg="#171717") #Main App 
 main_frame.pack(fill=BOTH, expand=1)
 
 window.title(app_name)
+window.iconbitmap("images\\icon.ico")
 
 window.geometry('900x600')
 #window.resizable(False, False) #Makes window not resizeable
