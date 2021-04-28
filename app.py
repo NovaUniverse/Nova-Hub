@@ -10,6 +10,7 @@ import time
 import subprocess
 from colour import Color
 import webbrowser
+import json
 
 import settings
 
@@ -122,7 +123,7 @@ def installations_menu(button_used, previous_frame):
 
     amount_of_installers = 0
 
-    def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, hex_list, hex_list_text):
+    def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label, hex_list, hex_list_text):
 
         for colour in hex_list:
             time.sleep(0.01)
@@ -136,33 +137,35 @@ def installations_menu(button_used, previous_frame):
             
             modpack_title.config(bg="{}".format(colour)) #Title
             pack_image_frame.config(bg="{}".format(colour)) #Image
+            version_label.config(bg="{}".format(colour)) #Version Label
         
         for colour in hex_list_text:
-            modpack_title.config(fg="{}".format(colour))
+            modpack_title.config(fg="{}".format(colour)) #Title
+            version_label.config(fg="{}".format(colour)) #Version Label
 
-    def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title):
+    def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title, version_label):
         hex_colour = Color("#282727")
         colours = list(hex_colour.range_to(Color("#C06565"), 12))
 
         hex_colour = Color("#C52612") #Text
         colours_text = list(hex_colour.range_to(Color("black"), 12))
         
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, colours, colours_text]))
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
-    def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title):
+    def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label):
         hex_colour = Color("#C06565")
         colours = list(hex_colour.range_to(Color("#282727"), 20))
 
         hex_colour = Color("black") #Text
         colours_text = list(hex_colour.range_to(Color("#C52612"), 20))
         
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, colours, colours_text]))
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
-    def install(modpack_frame, installs_button, pack_image_frame, modpack_title, run, run_option):
+    def install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, installer, run, run_option):
         def finish_effect():
             time.sleep(2)
             
@@ -175,7 +178,7 @@ def installations_menu(button_used, previous_frame):
             hex_colour = Color("#C52612") #Text
             colours_text = list(hex_colour.range_to(Color("black"), 12))
             
-            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, colours, colours_text]))
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
             t8.setDaemon(True)
             t8.start()
 
@@ -196,16 +199,15 @@ def installations_menu(button_used, previous_frame):
             t8.join()
             launch_button.place(x=53, y=180)
 
+        with open(settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "r") as f:
+            data_json = json.load(f)
+
         #Install Effect
         hex_colour = Color("#C06565")
-        colours = list(hex_colour.range_to(Color("#00C03E"), 40))
+        colours = list(hex_colour.range_to(Color("#00C03E"), 20))
 
         hex_colour = Color("#C52612") #Text
         colours_text = list(hex_colour.range_to(Color("black"), 12))
-        
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, colours, colours_text]))
-        t8.setDaemon(True)
-        t8.start()
 
         #Threads needed for install.
         t3=threading.Thread(target=run.run, args=([run_option])) #Run Installer thread.
@@ -216,6 +218,12 @@ def installations_menu(button_used, previous_frame):
         t2.setDaemon(True)
         t2.start()
 
+        time.sleep(0.1)
+
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
         t5=threading.Thread(target=finish, args=([t3])) #Finish Install
         t5.setDaemon(True)
         t5.start()
@@ -224,10 +232,23 @@ def installations_menu(button_used, previous_frame):
         t9.setDaemon(True)
         t9.start()
 
+        data_json["installed"] = True
+
+        with open (settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "w") as f:
+            json.dump(data_json, f)
+
     for installer in os.listdir(settings.path_to_installers):
         if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
             print (installer)
             from installers.Terra_Smp import run
+
+            try:
+                with open(settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "r") as f:
+                    data_json = json.load(f)
+                    ver = data_json["version"]
+
+            except Exception as e:
+                ver = 0
 
             modpack_frame = Frame(installations_frame, width=240, height=250, bg="#282727")
             modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
@@ -255,6 +276,10 @@ def installations_menu(button_used, previous_frame):
             modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
             modpack_title.place(x=0, y=135)
 
+            version_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
+            version_label = Label(modpack_frame, text="V" + str(ver), font=version_font, fg="#C52612", bg="#282727") #Where I left off
+            version_label.place(x=0, y=233)
+
             install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
 
             width, height = install_image.size
@@ -266,14 +291,40 @@ def installations_menu(button_used, previous_frame):
             tkimage = ImageTk.PhotoImage(install_image)
             installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
             cursor="hand2")
-            installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, modpack_title=modpack_title, run=run, run_option="NORMAL" : 
-            install(modpack_frame, installs_button, pack_image_frame, modpack_title, run, "NORMAL"))
+            installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, version_label=version_label, modpack_title=modpack_title, 
+            installer=installer, run=run, run_option="NORMAL" : install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, installer, run, "NORMAL"))
             installs_button.photo = tkimage
             installs_button.place(x=53, y=180)
             installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-            modpack_title=modpack_title: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title))
+            modpack_title=modpack_title, version_label=version_label: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label))
             installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-            modpack_title=modpack_title: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title))
+            modpack_title=modpack_title, version_label=version_label: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label))
+
+            if data_json["installed"] == True:
+                hex_colour = Color("#171717")
+                colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
+
+                hex_colour = Color("#C52612") #Text
+                colours_text = list(hex_colour.range_to(Color("black"), 12))
+
+                launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+
+                width, height = launch_image.size
+                
+                actual_width = round(int(width)/14)
+                actual_height = round(int(height)/14)
+
+                launch_image = launch_image.resize((actual_width, actual_height))
+                tkimage = ImageTk.PhotoImage(launch_image)
+                launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+                cursor="hand2")
+                launch_button.config(command=launch)
+                launch_button.photo = tkimage
+                launch_button.place(x=53, y=180)
+
+                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+                t8.setDaemon(True)
+                t8.start()
 
             amount_of_installers =+ 1
 
@@ -451,6 +502,27 @@ def open_url(url=None):
         url = settings.nova_universe_url
 
     webbrowser.open_new_tab(url)
+
+def launch(option=None):
+    def open_mc_launcher():
+        open_mc_launcher = True
+
+        if not open_mc_launcher == False:
+            subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
+    
+    if option == None:
+        option = "mcl"
+
+    if option.lower() == "mcl":
+        t10=threading.Thread(target=open_mc_launcher)
+        t10.setDaemon(True)
+        t10.start()
+
+    def open_mc_launcher():
+        open_mc_launcher = True
+
+        if not open_mc_launcher == False:
+            subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
 def app_close():
     global lrs
