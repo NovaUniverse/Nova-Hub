@@ -24,3 +24,5 @@ path_to_installers = "installers\\"
 path_to_images = "images\\"
 temp_folder_path = "temp\\"
 path_to_old_forge_folder = "old_forge\\"
+
+button_list = []
