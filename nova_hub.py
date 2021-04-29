@@ -2,6 +2,8 @@ import os
 import threading
 import time
 import ctypes
+import json
+import urllib.request
 
 from tkinter import *
 from tkinter import ttk
@@ -64,9 +66,22 @@ def updating_screen():
     window.resizable(False, False) #Makes window not resizeable
 
 def update_app():
-    updating_screen()
+    import settings
 
-    window.destroy() #End of update
+    with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
+        data_json = json.loads(url.read().decode())
+        ver = data_json["current_version"]
+
+    if ver > settings.version:
+        updating_screen() #Work in progress
+        time.sleep(2)
+
+        window.destroy() #End of update
+
+    if ver <= settings.version:
+        pass #Up to date
+
+    del settings #Unload settings.
 
 def run_update_service():
     pass
