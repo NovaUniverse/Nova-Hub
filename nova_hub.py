@@ -26,6 +26,9 @@ def focus_on_app():
 
     user32.ShowWindow(handle, 5)
 
+    # meaning of 2nd parameter defined here.
+    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms633548(v=vs.85).aspx
+
 
 def updating_screen():
     global window
@@ -76,10 +79,3 @@ if __name__ == '__main__':
 
     t2 = threading.Thread(target=focus_on_app)
     t2.start()
-
-
-
-    # meaning of 2nd parameter defined here.
-    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms633548(v=vs.85).aspx
-
-window.mainloop()
