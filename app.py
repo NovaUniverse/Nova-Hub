@@ -554,6 +554,7 @@ def start_up():
     nav_bar() #Loads Nav Bar
 
 t1=threading.Thread(target=start_up)
+t1.setDaemon(True)
 
 window = Tk()
 
@@ -571,7 +572,13 @@ window.geometry('900x600')
 
 window.protocol("WM_DELETE_WINDOW", app_close)
 
-start_up() #App startup runs within this function!
+t1.start() #App startup runs within this function!
+
+if __name__ == '__main__':
+    #Run nova__hub warning.
+    warning_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    warning_label = Label(main_frame, text=":( Please run Nova_Hub.exe/py when launching Nova Hub instead of just attempting to run the app.py.", font=warning_font, fg="#C52612", bg="#282727")
+    warning_label.pack(fill=BOTH)
 
 window.mainloop()
 
@@ -602,6 +609,3 @@ news_list = {
 
     }
 }
-
-if __name__ == '__main__':
-    pass
