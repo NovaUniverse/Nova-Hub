@@ -4,11 +4,11 @@ version = 1.00
 development_stage = "DEV"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
-nova_universe_url = "https://www.youtube.com/c/TheGoldenPro"
+#Be careful when changing json location. If you type a false location auto update will stop functioning.
+api = "http://192.168.1.176"
+nova_hub_json_location = "/files/nova_hub.json"
 
-forge_ver_name = "1.12.2-forge-14.23.5.2854"
-
-forge_1_12_2_identifiers = ["1.12.2-forge-", "forge-1.12.2-", "1.12.2-forge1"]
+nova_universe_url = "https://www.youtube.com/c/TheGoldenPro" #Change this to novauniverse website domain.
 
 #Paths
 appdata_dir = "C:" + (os.path.join(os.environ["HOMEPATH"], "AppData\\Roaming"))
