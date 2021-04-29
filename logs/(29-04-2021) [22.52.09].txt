@@ -1,0 +1,170 @@
+[TERRA SMP MODPACK INSTALLER V1.0 (DEV)]
+(22.52.13) Creating Temp Folder in 'temp\'
+(22.52.13) [INFO] Temp Folder Already Exists.
+
+(22.52.13) Creating AppData Folder in 'C:\Users\pc\AppData\Roaming\.NovaUniverse'
+(22.52.13) [INFO] AppData Folder Already Exists.
+
+(22.52.13) Creating Folder 'C:\Users\pc\AppData\Roaming\.NovaUniverse\TerraSMP'
+(22.52.13) [INFO] This Folder Already Exists.
+
+(22.52.13) Downloading Forge...
+(22.52.14) Extracting Forge...
+
+
+(22.52.14) [Done]
+
+(22.52.14) Checking if a version of Forge is already installed...
+(22.52.14) 1.12.2
+(22.52.14) 1.12.2-forge-14.23.5.2854
+(22.52.14) 1.12.2-OptiFine_HD_U_D3
+(22.52.14) 1.13.2
+(22.52.14) 1.13.2-OptiFine_HD_U_E6
+(22.52.14) 1.14.1
+(22.52.14) 1.14.3
+(22.52.14) 1.14.4
+(22.52.14) 1.14.4-forge-28.2.0
+(22.52.14) 1.14.4-OptiFine_HD_U_F2
+(22.52.14) 1.14.4-OptiFine_HD_U_F5
+(22.52.14) 1.14.4-pre1
+(22.52.14) 1.14.4-pre2
+(22.52.14) 1.14.4-pre3
+(22.52.14) 1.14.4-pre5
+(22.52.14) 1.14.4-pre6
+(22.52.14) 1.14.4-pre7
+(22.52.14) 1.15
+(22.52.14) 1.15-pre3
+(22.52.14) 1.15-pre6
+(22.52.14) 1.15-pre7
+(22.52.14) 1.15.1
+(22.52.14) 1.15.1-pre1
+(22.52.14) 1.15.2
+(22.52.14) 1.15.2-OptiFine_HD_U_G1_pre18
+(22.52.14) 1.15.2-OptiFine_HD_U_G1_pre30
+(22.52.14) 1.15.2-pre2
+(22.52.14) 1.16
+(22.52.14) 1.16-pre2
+(22.52.14) 1.16-pre5
+(22.52.14) 1.16-pre6
+(22.52.14) 1.16-pre8
+(22.52.14) 1.16.1
+(22.52.14) 1.16.1-OptiFine_HD_U_G2
+(22.52.14) 1.16.2
+(22.52.14) 1.16.2-OptiFine_HD_U_G3
+(22.52.14) 1.16.2-pre1
+(22.52.14) 1.16.2-pre3
+(22.52.14) 1.16.2-rc1
+(22.52.14) 1.16.2-rc2
+(22.52.14) 1.16.3
+(22.52.14) 1.16.4
+(22.52.14) 1.16.4-OptiFine_HD_U_G5
+(22.52.14) 1.16.4-pre1
+(22.52.14) 1.16.4-pre2
+(22.52.14) 1.16.4-rc1
+(22.52.14) 1.16.5
+(22.52.14) 1.16.5-rc1
+(22.52.14) 1.7.10
+(22.52.14) 1.7.10-Forge10.13.4.1558-1.7.10
+(22.52.14) 1.7.10-OptiFine_HD_U_E7
+(22.52.14) 1.8
+(22.52.14) 1.8.8
+(22.52.14) 1.8.9
+(22.52.14) 1.8.9-forge1.8.9-11.15.1.1722
+(22.52.14) 1.8.9-OptiFine_HD_U_I7
+(22.52.14) 1.8.9-OptiFine_HD_U_L5
+(22.52.14) 19w34a
+(22.52.14) 19w35a
+(22.52.14) 19w36a
+(22.52.14) 19w38b
+(22.52.14) 19w39a
+(22.52.14) 19w40a
+(22.52.14) 19w41a
+(22.52.14) 19w42a
+(22.52.14) 19w44a
+(22.52.14) 20w06a
+(22.52.14) 20w07a
+(22.52.14) 20w08a
+(22.52.14) 20w09a
+(22.52.14) 20w10a
+(22.52.14) 20w11a
+(22.52.14) 20w12a
+(22.52.14) 20w13a
+(22.52.14) 20w13b
+(22.52.14) 20w14a
+(22.52.14) 20w14infinite
+(22.52.14) 20w15a
+(22.52.14) 20w16a
+(22.52.14) 20w17a
+(22.52.14) 20w18a
+(22.52.14) 20w19a
+(22.52.14) 20w20a
+(22.52.14) 20w20b
+(22.52.14) 20w21a
+(22.52.14) 20w22a
+(22.52.14) 20w27a
+(22.52.14) 20w28a
+(22.52.14) 20w29a
+(22.52.14) 20w30a
+(22.52.14) 20w45a
+(22.52.14) 20w46a
+(22.52.14) 20w48a
+(22.52.14) 20w49a
+(22.52.14) 20w51a
+(22.52.14) 21w03a
+(22.52.14) 21w05a
+(22.52.14) 21w05b
+(22.52.14) 21w06a
+(22.52.14) 21w07a
+(22.52.14) 21w08b
+(22.52.14) 21w10a
+(22.52.14) 21w11a
+(22.52.14) 21w13a
+(22.52.14) 21w14a
+(22.52.14) 21w15a
+(22.52.14) 21w16a
+(22.52.14) 21w17a
+(22.52.14) BLClient112
+(22.52.14) BLClient1144
+(22.52.14) BLClient1152
+(22.52.14) BLClient116
+(22.52.14) BLClient1161
+(22.52.14) BLClient1162
+(22.52.14) BLClient1164
+(22.52.14) BLClient17
+(22.52.14) BLClient18
+(22.52.14) cache.dat
+(22.52.14) fabric-loader-0.7.8+build.184-1.14.4
+(22.52.14) LabyMod-3-1.8.9
+(22.52.14) PixelClient
+(22.52.14) version_manifest_v2.json
+(22.52.14) Wurst MC 1.8 OF
+(22.52.14) [INFO] Replacement Forge Already Exsits
+
+(22.52.14) Clearing Temp Folder...
+(22.52.14) Removing 1.12.2-forge-14.23.5.2854
+(22.52.14) [Done]
+(22.52.14) Removing forge.zip
+(22.52.14) [Done]
+
+(22.52.14) Downloading Mods...
+(22.52.15) Extracting Mods...
+
+
+(22.52.15) [Done]
+
+(22.52.15) Deleting temp\mods.zip...
+(22.52.15) [Done]
+
+(22.52.15) Creating Folder 'C:\Users\pc\AppData\Roaming\.NovaUniverse\TerraSMP\mods'
+(22.52.15) [INFO] This Folder Already Exists.
+
+(22.52.15) Clearing Mods Folder...
+(22.52.15) Removing OwO.txt
+(22.52.15) [Done]
+(22.52.15) Removing TERRA SMP IS POG.txt
+(22.52.15) [Done]
+
+
+(22.52.15) Opening MC Launcher...
+(22.52.15) [DONE]
+
