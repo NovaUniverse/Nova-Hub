@@ -1,0 +1,170 @@
+[TERRA SMP MODPACK INSTALLER V1.0 (DEV)]
+(20.22.50) Creating Temp Folder in 'temp\'
+(20.22.50) [INFO] Temp Folder Already Exists.
+
+(20.22.50) Creating AppData Folder in 'C:\Users\pc\AppData\Roaming\.NovaUniverse'
+(20.22.50) [INFO] AppData Folder Already Exists.
+
+(20.22.50) Creating Folder 'C:\Users\pc\AppData\Roaming\.NovaUniverse\TerraSMP'
+(20.22.50) [INFO] This Folder Already Exists.
+
+(20.22.50) Downloading Forge...
+(20.22.52) Extracting Forge...
+
+
+(20.22.52) [Done]
+
+(20.22.52) Checking if a version of Forge is already installed...
+(20.22.52) 1.12.2
+(20.22.52) 1.12.2-forge-14.23.5.2854
+(20.22.52) 1.12.2-OptiFine_HD_U_D3
+(20.22.52) 1.13.2
+(20.22.52) 1.13.2-OptiFine_HD_U_E6
+(20.22.52) 1.14.1
+(20.22.52) 1.14.3
+(20.22.52) 1.14.4
+(20.22.52) 1.14.4-forge-28.2.0
+(20.22.52) 1.14.4-OptiFine_HD_U_F2
+(20.22.52) 1.14.4-OptiFine_HD_U_F5
+(20.22.52) 1.14.4-pre1
+(20.22.52) 1.14.4-pre2
+(20.22.52) 1.14.4-pre3
+(20.22.52) 1.14.4-pre5
+(20.22.52) 1.14.4-pre6
+(20.22.52) 1.14.4-pre7
+(20.22.52) 1.15
+(20.22.52) 1.15-pre3
+(20.22.52) 1.15-pre6
+(20.22.52) 1.15-pre7
+(20.22.52) 1.15.1
+(20.22.52) 1.15.1-pre1
+(20.22.52) 1.15.2
+(20.22.52) 1.15.2-OptiFine_HD_U_G1_pre18
+(20.22.52) 1.15.2-OptiFine_HD_U_G1_pre30
+(20.22.52) 1.15.2-pre2
+(20.22.52) 1.16
+(20.22.52) 1.16-pre2
+(20.22.52) 1.16-pre5
+(20.22.52) 1.16-pre6
+(20.22.52) 1.16-pre8
+(20.22.52) 1.16.1
+(20.22.52) 1.16.1-OptiFine_HD_U_G2
+(20.22.52) 1.16.2
+(20.22.52) 1.16.2-OptiFine_HD_U_G3
+(20.22.52) 1.16.2-pre1
+(20.22.52) 1.16.2-pre3
+(20.22.52) 1.16.2-rc1
+(20.22.52) 1.16.2-rc2
+(20.22.52) 1.16.3
+(20.22.52) 1.16.4
+(20.22.52) 1.16.4-OptiFine_HD_U_G5
+(20.22.52) 1.16.4-pre1
+(20.22.52) 1.16.4-pre2
+(20.22.52) 1.16.4-rc1
+(20.22.52) 1.16.5
+(20.22.52) 1.16.5-rc1
+(20.22.52) 1.7.10
+(20.22.52) 1.7.10-Forge10.13.4.1558-1.7.10
+(20.22.52) 1.7.10-OptiFine_HD_U_E7
+(20.22.52) 1.8
+(20.22.52) 1.8.8
+(20.22.52) 1.8.9
+(20.22.52) 1.8.9-forge1.8.9-11.15.1.1722
+(20.22.52) 1.8.9-OptiFine_HD_U_I7
+(20.22.52) 1.8.9-OptiFine_HD_U_L5
+(20.22.52) 19w34a
+(20.22.52) 19w35a
+(20.22.52) 19w36a
+(20.22.52) 19w38b
+(20.22.52) 19w39a
+(20.22.52) 19w40a
+(20.22.52) 19w41a
+(20.22.52) 19w42a
+(20.22.52) 19w44a
+(20.22.52) 20w06a
+(20.22.52) 20w07a
+(20.22.52) 20w08a
+(20.22.52) 20w09a
+(20.22.52) 20w10a
+(20.22.52) 20w11a
+(20.22.52) 20w12a
+(20.22.52) 20w13a
+(20.22.52) 20w13b
+(20.22.52) 20w14a
+(20.22.52) 20w14infinite
+(20.22.52) 20w15a
+(20.22.52) 20w16a
+(20.22.52) 20w17a
+(20.22.52) 20w18a
+(20.22.52) 20w19a
+(20.22.52) 20w20a
+(20.22.52) 20w20b
+(20.22.52) 20w21a
+(20.22.52) 20w22a
+(20.22.52) 20w27a
+(20.22.52) 20w28a
+(20.22.52) 20w29a
+(20.22.52) 20w30a
+(20.22.52) 20w45a
+(20.22.52) 20w46a
+(20.22.52) 20w48a
+(20.22.52) 20w49a
+(20.22.52) 20w51a
+(20.22.52) 21w03a
+(20.22.52) 21w05a
+(20.22.52) 21w05b
+(20.22.52) 21w06a
+(20.22.52) 21w07a
+(20.22.52) 21w08b
+(20.22.52) 21w10a
+(20.22.52) 21w11a
+(20.22.52) 21w13a
+(20.22.52) 21w14a
+(20.22.52) 21w15a
+(20.22.52) 21w16a
+(20.22.52) 21w17a
+(20.22.52) BLClient112
+(20.22.52) BLClient1144
+(20.22.52) BLClient1152
+(20.22.52) BLClient116
+(20.22.52) BLClient1161
+(20.22.52) BLClient1162
+(20.22.52) BLClient1164
+(20.22.52) BLClient17
+(20.22.52) BLClient18
+(20.22.52) cache.dat
+(20.22.52) fabric-loader-0.7.8+build.184-1.14.4
+(20.22.52) LabyMod-3-1.8.9
+(20.22.52) PixelClient
+(20.22.52) version_manifest_v2.json
+(20.22.52) Wurst MC 1.8 OF
+(20.22.52) [INFO] Replacement Forge Already Exsits
+
+(20.22.52) Clearing Temp Folder...
+(20.22.52) Removing 1.12.2-forge-14.23.5.2854
+(20.22.52) [Done]
+(20.22.52) Removing forge.zip
+(20.22.52) [Done]
+
+(20.22.52) Downloading Mods...
+(20.22.53) Extracting Mods...
+
+
+(20.22.53) [Done]
+
+(20.22.53) Deleting temp\mods.zip...
+(20.22.53) [Done]
+
+(20.22.53) Creating Folder 'C:\Users\pc\AppData\Roaming\.NovaUniverse\TerraSMP\mods'
+(20.22.53) [INFO] This Folder Already Exists.
+
+(20.22.53) Clearing Mods Folder...
+(20.22.53) Removing OwO.txt
+(20.22.53) [Done]
+(20.22.53) Removing TERRA SMP IS POG.txt
+(20.22.53) [Done]
+
+
+(20.22.53) Opening MC Launcher...
+(20.22.53) [DONE]
+

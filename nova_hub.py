@@ -12,6 +12,7 @@ from PIL import ImageTk, Image, ImageFilter
 import tkinter.font as font
 
 def launch_app():
+    t2.join()
     import app
 
 def focus_on_app():
@@ -32,7 +33,7 @@ def focus_on_app():
     # https://msdn.microsoft.com/en-us/library/windows/desktop/ms633548(v=vs.85).aspx
 
 
-def updating_screen():
+def updating_screen(new_version, old_version):
     global window
 
     window = Tk()
@@ -60,10 +61,16 @@ def updating_screen():
     update_image_label.photo = tkimage
     update_image_label.pack(side="left", padx=20)
 
+    version_text_font = font.Font(family='Arial Rounded MT Bold', size=20, weight='bold', underline=False)
+    version_text = Label(main_frame, text="V" + str(old_version) + " --> V" + str(new_version), font=version_text_font, fg="#C52612", bg="#171717")
+    version_text.pack(side="right")
+
     window.title("NOVA HUB UPDATER")
     window.iconbitmap("images\\update_icon.ico")
     window.geometry('800x200')
     window.resizable(False, False) #Makes window not resizeable
+
+    window.mainloop()
 
 def update_app():
     import settings
@@ -73,10 +80,10 @@ def update_app():
         ver = data_json["current_version"]
 
     if ver > settings.version:
-        updating_screen() #Work in progress
-        time.sleep(2)
+        updating_screen(ver, settings.version) #Work in progress
+        
 
-        window.destroy() #End of update
+        #window.destroy() #End of update
 
     if ver <= settings.version:
         pass #Up to date
@@ -87,10 +94,11 @@ def run_update_service():
     pass
 
 if __name__ == '__main__':
-    update_app()
+    t2 = threading.Thread(target=update_app)
+    t2.start()
 
     t1 = threading.Thread(target=launch_app)
     t1.start()
 
-    t2 = threading.Thread(target=focus_on_app)
-    t2.start()
+    t11 = threading.Thread(target=focus_on_app)
+    t11.start()

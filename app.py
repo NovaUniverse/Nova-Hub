@@ -11,6 +11,7 @@ import subprocess
 from colour import Color
 import webbrowser
 import json
+import importlib
 
 import settings
 
@@ -224,7 +225,7 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
-        t5=threading.Thread(target=finish, args=([t3])) #Finish Install
+        t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
         t5.setDaemon(True)
         t5.start()
 
@@ -240,7 +241,11 @@ def installations_menu(button_used, previous_frame):
     for installer in os.listdir(settings.path_to_installers):
         if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
             print (installer)
-            from installers.Terra_Smp import run
+            try:
+                run = importlib.import_module(f"installers.{installer}.run")
+
+            except Exception as e:
+                pass
 
             try:
                 with open(settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "r") as f:
