@@ -12,7 +12,7 @@ from PIL import ImageTk, Image, ImageFilter
 import tkinter.font as font
 
 def launch_app():
-    t2.join()
+    t2.join() #Hi
     import app
 
 def focus_on_app():
