@@ -348,6 +348,68 @@ def home_menu(button_used, previous_frame):
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
 
+    news_feed_drawer(home_frame, "Help me, I've been coding for 4 hours.", ("IMPORTANT", "#971B1B"), "Goldy", (19, "May", "10 Seconds ago"), 
+    "I honestly think zeeraa should give me all his dogecoin in return of coding this app. I will spend it very wisely :D ")
+
+amount_of_news = 0
+def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_des):
+    news_frame = Frame(frame, width=800, height=400, bg="#282727")
+    news_frame.pack(pady=20)
+
+    #Top Red Border
+    red_bar = Frame(news_frame, width=800, height=40, bg="#9F1F0F")
+    red_bar.place(x=0, y=0)
+
+    #Heading
+    heading_text_font = font.Font(family='Arial Rounded MT Bold', size=12, underline=False)
+    heading_text = Label(red_bar, text=heading, font=heading_text_font, fg="white", bg="#9F1F0F")
+    heading_text.place(x=10, y=6)
+
+    #News Tag
+    news_tag_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
+    news_tag_text = Label(red_bar, text=news_tag[0].upper(), font=news_tag_font, fg="white", bg=news_tag[1])
+    news_tag_text.place(x=700, y=10)
+
+    #Details Bar Border
+    details_bar = Frame(news_frame, width=800, height=50, bg="#282727")
+    details_bar.place(x=0, y=40)
+
+    details_bar_line = Label(details_bar, text="─────────────────────────────────────────────────────────────────", fg="#424242", bg="#282727")
+    details_bar_line.place(x=7, y=30)
+
+    #Author Label
+    author_label_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
+    author_label = Label(details_bar, text=author_name + " • ", font=author_label_font, fg="grey", bg="#282727")
+    author_label.place(x=25, y=10)
+
+    #Time Label
+    time_label_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
+    time_label = Label(details_bar, text=date_time[2], font=time_label_font, fg="grey", bg="#282727")
+    time_label.place(x=73, y=10)
+
+    #Date Box
+    date_box = Frame(news_frame, width=40, height=60, bg="#9F1F0F")
+    date_box.place(x=10, y=100)
+
+    date_label_font = font.Font(family='Arial Rounded MT Bold', size=18, underline=False)
+    date_label = Label(date_box, text=date_time[0], font=date_label_font, fg="white", bg="#9F1F0F")
+    date_label.place(x=2.5, y=0)
+
+    month_box = Frame(date_box, width=40, height=25, bg="#171717")
+    month_box.place(x=0, y=35)
+
+    month_label_font = font.Font(family='Arial Rounded MT Bold', size=12, underline=False)
+    month_label = Label(month_box, text=date_time[1].upper(), font=month_label_font, fg="grey", bg="#171717")
+    month_label.place(x=0, y=0)
+
+    embeded_description_frame = Frame(news_frame, width=730, height=300, bg="#282727")
+    embeded_description_frame.place(x=60, y=90)
+
+    month_label_font = font.Font(family='Arial Rounded MT Bold', size=12, underline=False)
+    embeded_des_label = Label(embeded_description_frame, text=embeded_des, font=month_label_font, fg="#BDBDBD", bg="#282727", wraplength=740)
+    embeded_des_label.pack()
+
+
 def finish(thread_to_wait_for):
 
     thread_to_wait_for.join()
@@ -522,12 +584,6 @@ def launch(option=None):
         t10=threading.Thread(target=open_mc_launcher)
         t10.setDaemon(True)
         t10.start()
-
-    def open_mc_launcher():
-        open_mc_launcher = True
-
-        if not open_mc_launcher == False:
-            subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
 def app_close():
     global lrs
