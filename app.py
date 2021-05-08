@@ -12,6 +12,8 @@ from colour import Color
 import webbrowser
 import json
 import importlib
+from tkinterweb import HtmlFrame
+import urllib.request
 
 import settings
 
@@ -67,7 +69,7 @@ def nav_bar():
     nav_bar = Frame(main_frame, width=window.winfo_width(), height=window.winfo_height() / 18, bg="#3D0000") #NavBar
     nav_bar.pack(side="top", fill=BOTH)
 
-    Nova_Logo = Image.open("images/Nova-Universe.png")
+    Nova_Logo = Image.open(settings.path_to_images + "Nova-Universe.png")
     width, height = Nova_Logo.size
     
     actual_width = round(int(width)/11)
@@ -143,6 +145,10 @@ def installations_menu(button_used, previous_frame):
         for colour in hex_list_text:
             modpack_title.config(fg="{}".format(colour)) #Title
             version_label.config(fg="{}".format(colour)) #Version Label
+
+    def zoom_in_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label):
+
+        pass
 
     def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title, version_label):
         hex_colour = Color("#282727")
@@ -348,16 +354,29 @@ def home_menu(button_used, previous_frame):
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
 
-    news_feed_drawer(home_frame, "Help me, I've been coding for 4 hours.", ("IMPORTANT", "#971B1B"), "Goldy", (19, "May", "10 Seconds ago"), 
-    "I honestly think zeeraa should give me all his dogecoin in return of coding this app. I will spend it very wisely :D ")
+    #news_feed_drawer(home_frame, "Help me, I've been coding for 4 hours.", ("IMPORTANT"), "Goldy", (19, "May", "10 Seconds ago"), 
+    #"I honestly think zeeraa should give me all his dogecoin in return of coding this app. I will spend it very wisely :D ")
+
+    news_feed_drawer(home_frame, "NOVA HUB NEWS FEED COMING IN A LATER UPDATE...", ("IMPORTANT"), "Goldy", (2, "May", "∞ Seconds ago"), 
+    "There's no actual news here becasue the module that allows me to easily grab the news currently has a bug with 64bit operating systems. Once this bug is fixed by the module owner I will release an update that enables the news feed.")
 
 amount_of_news = 0
+
+def test(frame=None): #Wait untill module dev fixes issue.
+    html_frame = HtmlFrame(frame)
+    html_frame.load_website("https://www.google.com/") #load a website
+    html_frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
+    
 def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_des):
+    #frame = Tkinter frame to draw to.
+    #heading = The title for the news. (Takes string)
+    #news_tag = The tag at the top righy (Takes string)
+
     news_frame = Frame(frame, width=800, height=400, bg="#282727")
     news_frame.pack(pady=20)
 
     #Top Red Border
-    red_bar = Frame(news_frame, width=800, height=40, bg="#9F1F0F")
+    red_bar = Frame(news_frame, width=800, height=40, bg="#9F1F0F", cursor="hand2")
     red_bar.place(x=0, y=0)
 
     #Heading
@@ -366,8 +385,17 @@ def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_d
     heading_text.place(x=10, y=6)
 
     #News Tag
+    if news_tag.upper() == 'IMPORTANT':
+        news_tag_colour = "#971B1B" #Red
+
+    if news_tag.upper() == 'NEWS':
+        news_tag_colour = "#4ACE4E" #Green
+
+    if news_tag.upper() == 'UPDATE':
+        news_tag_colour = "#F4A236" #Orange
+
     news_tag_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
-    news_tag_text = Label(red_bar, text=news_tag[0].upper(), font=news_tag_font, fg="white", bg=news_tag[1])
+    news_tag_text = Label(red_bar, text=news_tag.upper(), font=news_tag_font, fg="white", bg=news_tag_colour)
     news_tag_text.place(x=700, y=10)
 
     #Details Bar Border
@@ -377,23 +405,43 @@ def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_d
     details_bar_line = Label(details_bar, text="─────────────────────────────────────────────────────────────────", fg="#424242", bg="#282727")
     details_bar_line.place(x=7, y=30)
 
+    #Author Head
+    head_image = Image.open(settings.path_to_images + "goldens_head.png") #Defult Head
+
+    width, height = head_image.size
+    
+    actual_width = round(int(width)/8)
+    actual_height = round(int(height)/9)
+
+    head_image = head_image.resize((actual_width, actual_height))
+    tkimage = ImageTk.PhotoImage(head_image)
+    head_label = Label(details_bar, image=tkimage, bg="#282727")
+    head_label.photo = tkimage
+    head_label.place(x=3, y=9)
+
     #Author Label
     author_label_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
     author_label = Label(details_bar, text=author_name + " • ", font=author_label_font, fg="grey", bg="#282727")
-    author_label.place(x=25, y=10)
+    author_label.place(x=30, y=10)
 
-    #Time Label
+    #Time ago Label
     time_label_font = font.Font(family='Arial Rounded MT Bold', size=10, underline=False)
     time_label = Label(details_bar, text=date_time[2], font=time_label_font, fg="grey", bg="#282727")
-    time_label.place(x=73, y=10)
+    time_label.place(x=81, y=10)
 
     #Date Box
     date_box = Frame(news_frame, width=40, height=60, bg="#9F1F0F")
     date_box.place(x=10, y=100)
 
-    date_label_font = font.Font(family='Arial Rounded MT Bold', size=18, underline=False)
-    date_label = Label(date_box, text=date_time[0], font=date_label_font, fg="white", bg="#9F1F0F")
-    date_label.place(x=2.5, y=0)
+    if len(str(date_time[0])) == 1:
+        date_label_font = font.Font(family='Arial Rounded MT Bold', size=18, underline=False)
+        date_label = Label(date_box, text=date_time[0], font=date_label_font, fg="white", bg="#9F1F0F")
+        date_label.place(x=10, y=0)
+
+    if len(str(date_time[0])) == 2:
+        date_label_font = font.Font(family='Arial Rounded MT Bold', size=18, underline=False)
+        date_label = Label(date_box, text=date_time[0], font=date_label_font, fg="white", bg="#9F1F0F")
+        date_label.place(x=2.5, y=0)
 
     month_box = Frame(date_box, width=40, height=25, bg="#171717")
     month_box.place(x=0, y=35)
@@ -402,13 +450,13 @@ def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_d
     month_label = Label(month_box, text=date_time[1].upper(), font=month_label_font, fg="grey", bg="#171717")
     month_label.place(x=0, y=0)
 
+    #News Embed Description
     embeded_description_frame = Frame(news_frame, width=730, height=300, bg="#282727")
     embeded_description_frame.place(x=60, y=90)
 
-    month_label_font = font.Font(family='Arial Rounded MT Bold', size=12, underline=False)
-    embeded_des_label = Label(embeded_description_frame, text=embeded_des, font=month_label_font, fg="#BDBDBD", bg="#282727", wraplength=740)
+    embeded_des_font = font.Font(family='Arial Rounded MT Bold', size=13, underline=False)
+    embeded_des_label = Label(embeded_description_frame, text=embeded_des, font=embeded_des_font, fg="#BDBDBD", bg="#282727", wraplength=740)
     embeded_des_label.pack()
-
 
 def finish(thread_to_wait_for):
 
@@ -447,7 +495,6 @@ def make_unclickable(button):
 def reset_clickable(button_list):
     for button in button_list:
         button["state"] = "normal"
-
 
 def color_glow_effect(e, hex_list):
 
@@ -564,6 +611,96 @@ def logo_brething_effect(Nova_Logo, Nova_Logo_0, logo_label, actual_width, actua
             logo_label.config(image=tkimage)
             logo_label.photo = tkimage
 
+def logo_brething_effect_v2(Nova_Logo, Nova_Logo_0, logo_label, actual_width, actual_height):
+
+    first_logo_size = Nova_Logo.resize((actual_width, actual_height))
+
+    size_list_norm = []
+    sizes_list_normal = [Nova_Logo_0]
+
+    for x in range(1000):
+        if not x == 0:
+            size = 1.000 + float(f'0.0{x}')
+            print (size) #Debug
+            size_list_norm.append(size)
+            logo_size = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+            sizes_list_normal.append(logo_size)
+
+    size_list_rev = size_list_norm
+    size_list_rev.reverse()
+
+    sizes_list_reverse = sizes_list_normal
+    sizes_list_reverse.reverse()
+
+    sizes_list = sizes_list_normal + sizes_list_reverse
+
+    size_list = size_list_norm + size_list_rev
+    print (size_list)
+
+    while True:
+
+        '''
+        for logo in sizes_list:
+            time.sleep(0.0001)
+            print (logo)
+            tkimage = ImageTk.PhotoImage(logo)
+            logo_label.config(image=tkimage)
+            logo_label.photo = tkimage
+
+        '''
+
+    '''
+    logo_size_1 = Nova_Logo.resize((actual_width, actual_height))
+    size = 1.001
+    logo_size_2 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.002
+    logo_size_3 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.003
+    logo_size_4 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.004
+    logo_size_5 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.005
+    logo_size_6 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.006
+    logo_size_7 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.007
+    logo_size_8 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.008
+    logo_size_9 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.009
+    logo_size_10 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.010
+    logo_size_11 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.011
+    logo_size_12 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.012
+    logo_size_13 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.013
+    logo_size_14 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.014
+    logo_size_15 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.015
+    logo_size_16 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.016
+    logo_size_17 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.017
+    logo_size_18 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.018
+    logo_size_19 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.019
+    logo_size_20 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.020
+    logo_size_21 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.021
+    logo_size_22 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.022
+    logo_size_23 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.023
+    logo_size_24 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    size = 1.024
+    logo_size_25 = Nova_Logo.resize((round(actual_width*size), round(actual_height*size)))
+    '''
+
 def open_url(url=None):
     if not type(url) == type(""):
         url = settings.nova_universe_url
@@ -611,7 +748,6 @@ def app_close():
         pass
 
 def start_up():
-    #Normal Start Up
     nav_bar() #Loads Nav Bar
 
 t1=threading.Thread(target=start_up)
@@ -626,7 +762,7 @@ main_frame = Frame(main_canvas, width=1280, height=720, bg="#171717") #Main App 
 main_frame.pack(fill=BOTH, expand=1)
 
 window.title(app_name)
-window.iconbitmap("images\\icon.ico")
+window.iconbitmap(settings.path_to_images + "icon.ico")
 
 window.geometry('900x600')
 #window.resizable(False, False) #Makes window not resizeable

@@ -21,7 +21,8 @@ path_to_mc_launcher_exe = "C:\\Program Files (x86)\\Minecraft Launcher\\Minecraf
 
 path_to_logs = "logs\\"
 path_to_installers = "installers\\"
-path_to_images = "images\\"
+path_to_images = "assets\\"
+path_to_assets = path_to_images
 temp_folder_path = "temp\\"
 path_to_old_forge_folder = "old_forge\\"
 
