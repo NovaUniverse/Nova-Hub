@@ -4,6 +4,7 @@ import time
 import ctypes
 import json
 import urllib.request
+import requests
 
 from tkinter import *
 from tkinter import ttk
@@ -12,15 +13,16 @@ from PIL import ImageTk, Image, ImageFilter
 import tkinter.font as font
 
 import settings
+import nova_func
 
 live_installer_status = "Starting..."
 live_installer_progress_bar = 0
 
 def launch_app(thread_to_wait_for=None):
-    if not thread_to_wait_for == None:
+    if not thread_to_wait_for == None: #Waits for update thread to finish.
         thread_to_wait_for.join()
         
-    import app
+    import app #Launchs Nova Hub
 
 def focus_on_app():
 
@@ -38,7 +40,7 @@ def focus_on_app():
     #Meaning of 2nd parameter defined here.
     #https://msdn.microsoft.com/en-us/library/windows/desktop/ms633548(v=vs.85).aspx
 
-def live_run_status(frame): #Updates
+def live_run_status(frame):
     global lrs
     global live_installer_status
     global live_installer_progress_bar
@@ -51,7 +53,7 @@ def live_run_status(frame): #Updates
     live_status_text.config(anchor=CENTER)
     live_status_text.place(x=418, y=75)
 
-    s = ttk.Style() #Apply Theme
+    s = ttk.Style() #Applys Theme
     s.theme_use('clam')
     s.configure("terra.Horizontal.TProgressbar", foreground='#C06565', background='#9F1F0F')
 
@@ -68,39 +70,44 @@ def live_run_status(frame): #Updates
 
         time.sleep(0.06)
 
+    window.mainloop()
+
 def check_for_update():
     global live_installer_progress_bar
+    import settings
 
-    try: #Ignores this error --> UnboundLocalError: local variable 'settings' referenced before assignment
-        with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
-            data_json = json.loads(url.read().decode())
-            ver = data_json["current_version"]
+    with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
+        data_json = json.loads(url.read().decode())
+        ver = data_json["current_version"]
 
-        if ver > settings.version: #Work in progress
-            
-            version_text.config(text="V" + str(settings.version) + " --> V" + str(settings.path_to_assets))
+    if ver > settings.version: #Work in progress
+        #I disabled the live status thread because of main loop error.
 
-            t12 = threading.Thread(target=live_run_status, args=([main_frame]))
-            t12.setDaemon(True)
-            t12.start()
+        #version_text.config(text="V" + str(settings.version) + " --> V" + str(settings.path_to_assets))
+        
+        t12 = threading.Thread(target=live_run_status, args=([main_frame]))
+        t12.setDaemon(True)
+        #t12.start()
 
-            del settings #Unload settings.
+        del settings #Unload settings.
 
-            live_installer_progress_bar = 90
+        #Update...
 
-            #Update...
+        update_app("app")
 
-            #End of update
+        #End of update
 
-        if ver <= settings.version:
-            pass #Up to date
+    import settings
 
-    except UnboundLocalError as e:
-        pass
+    if ver <= settings.version:
+        pass #Up to date
+
+def update_app(mode):
+    if mode.lower() == "app":
+        nova_func.download_file(settings.api + settings.nova_hub_update_package_location, "update.zip")
 
 def run_update_service():
     pass
-
 
 window = Tk()
 
