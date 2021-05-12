@@ -160,15 +160,21 @@ def create_folder(path):
         print_and_log()
         return path
 
-def extract_zip(path_to_zip):
+def extract_zip(path_to_zip, text_label=None):
     import settings
     try:
         with ZipFile(path_to_zip, 'r') as zip:
+            if not text_label == None:
+                text_label.config(text=f"Excracting {path_to_zip}...")
+    
             print_and_log()
             zip.printdir()
             print_and_log()
             zip.extractall(settings.temp_folder_path)
             print_and_log(None, "[Done]")
+            if not text_label == None:
+                text_label.config(text="[DONE]")
+
             print_and_log()
             zip.close()
         return True
@@ -176,38 +182,65 @@ def extract_zip(path_to_zip):
     except OSError as e:
         print_and_log("ERROR", e)
         print_and_log()
-        live_installer_status = e
+        if not text_label == None:
+            text_label.config(text=e)
         return False
 
     del settings
 
-def move_files(from_dir, target_dir): #Move multiple files from a directory.
-    try:
-        files = os.listdir(from_dir)
- 
-        for f in files:
+def move_files(from_dir, target_dir, text_label=None, replace=False): #Move multiple files from a directory.
+    files = os.listdir(from_dir)
+
+    for f in files:
+        try:
             print_and_log(None, f"Moving {f} to {target_dir}")
+            if not text_label == None:
+                text_label.config(text=f"Moving {f} to {target_dir}")
+
             shutil.move(from_dir + f, target_dir)
             print_and_log(None, "[Done]")
 
-        print_and_log()
-        return True
+            if not text_label == None:
+                text_label.config(text="[Done]")
 
-    except FileExistsError as e:
-        print_and_log("INFO", "This File Already Exists.")
-        print_and_log()
-        return False
+        except OSError as e:
+            if replace == True: #Deletes File and replaces it with new file. (Basically overwrites the file.)
+                print_and_log("INFO", "Deleting file '{}'...".format(f))
+                if not text_label == None:
+                    text_label.config(text="Deleting file '{}'...".format(f))
+                os.remove(from_dir + f)
 
-    except OSError as e:
-        print_and_log("ERROR", e)
-        print_and_log()
-        live_installer_status = e
-        return False
+                print_and_log(None, "[DONE]")
+                if not text_label == None:
+                    text_label.config(text="[DONE]")
+
+                #Try moving again
+                print_and_log(None, f"Moving {f} to {target_dir}")
+                if not text_label == None:
+                    text_label.config(text=f"Moving {f} to {target_dir}")
+
+                shutil.move(from_dir + f, target_dir)
+                print_and_log(None, "[Done]")
+
+                if not text_label == None:
+                    text_label.config(text="[Done]")
+
+            else:
+                print_and_log("ERROR", e)
+                print_and_log()
+                if not text_label == None:
+                    text_label.config(text=e)
+                return False
+
+
+    print_and_log()
+    return True
 
 def move_file(f, target_dir): #Move a single file
     try:
         print_and_log(None, f"Moving {f} to {target_dir}")
         shutil.move(f, target_dir)
+
         print_and_log(None, "[Done]")
         print_and_log()
         return True
@@ -215,6 +248,12 @@ def move_file(f, target_dir): #Move a single file
     except FileExistsError as e:
         print_and_log("INFO", "This File Already Exists.")
         print_and_log()
+
+        if os.path.isdir(target_dir): #Checks if it's a directory and removes all the contexts within it.
+            if os.path.exists(target_dir):
+                print_and_log("INFO", "Deleting directory '{}'...".format(target_dir))
+                shutil.rmtree(target_dir)
+
         return False
 
     except OSError as e:
@@ -223,11 +262,13 @@ def move_file(f, target_dir): #Move a single file
         live_installer_status = e
         return False
 
-def download_file(url, download_path):
+def download_file(url, download_path, text_label=None):
     import settings
     try:
         print_and_log(None, "Downloading {}...".format(download_path))
         headers = {'User-Agent': str(settings.app_name)}
+        if not text_label == None:
+            text_label.config(text="Downloading {}...".format(download_path))
 
         r = requests.get(url, allow_redirects=True, headers=headers)
         with open(download_path, 'wb') as f:
@@ -235,15 +276,22 @@ def download_file(url, download_path):
                 f.write(chunk)
 
         print_and_log(None, "[DONE]")
+        if not text_label == None:
+            text_label.config(text="[DONE]")
 
         return True
 
     except OSError as e:
         print_and_log("ERROR", e)
-        live_installer_status = e
+        if not text_label == None:
+            text_label.config(text=e)
         return False
 
     del settings
+
+def check_dir(path_to_dir):
+    files = os.listdir(path_to_dir)
+    return files
 
 def create_mc_launcher_profile():
 
