@@ -294,7 +294,6 @@ def check_dir(path_to_dir):
     return files
 
 def create_mc_launcher_profile():
-
     try:
         pass #Work in progress
 
