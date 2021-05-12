@@ -1,0 +1,10 @@
+Nova Hub:
+    ☐ Add option to uninstall modpacks.
+
+    Modpack Update Downloader:
+        ☐ Start working on Background update downloader. (This thread downloads updates for installed modpacks in the background of the app.)
+        
+Terra Smp Installer:
+    ☐ Add mc launcher profile creater code to run function.
+    ☐ Remove gui and clean up the installer files a bit.
+    ☐ 
