@@ -16,6 +16,7 @@ from tkinterweb import HtmlFrame
 import urllib.request
 
 import settings
+from nova_func import print_and_log
 
 app_name = settings.app_name
 
@@ -23,6 +24,9 @@ ver_v = "V" + str(settings.version)
 
 lrs = False #Turns Live Status Thread off.
 live_installer_status = "Starting Live Install Status Thread..."
+
+downloaded_modpacks = {}
+downloaded_modpacks['modpacks'] = {}
 
 def live_run_status(run, modpack_frame): #Updates
     global live_installer_status
@@ -126,7 +130,7 @@ def installations_menu(button_used, previous_frame):
 
     amount_of_installers = 0
 
-    def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label, hex_list, hex_list_text):
+    def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, hex_list, hex_list_text):
 
         for colour in hex_list:
             time.sleep(0.01)
@@ -141,6 +145,7 @@ def installations_menu(button_used, previous_frame):
             modpack_title.config(bg="{}".format(colour)) #Title
             pack_image_frame.config(bg="{}".format(colour)) #Image
             version_label.config(bg="{}".format(colour)) #Version Label
+            settings_button.config(bg="{}".format(colour), activebackground="{}".format(colour)) #Settings Button
         
         for colour in hex_list_text:
             modpack_title.config(fg="{}".format(colour)) #Title
@@ -172,7 +177,7 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
-    def install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, installer, run, run_option):
+    def install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, installer, run, run_option):
         def finish_effect():
             time.sleep(2)
             
@@ -185,7 +190,7 @@ def installations_menu(button_used, previous_frame):
             hex_colour = Color("#C52612") #Text
             colours_text = list(hex_colour.range_to(Color("black"), 12))
             
-            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
             t8.setDaemon(True)
             t8.start()
 
@@ -227,7 +232,7 @@ def installations_menu(button_used, previous_frame):
 
         time.sleep(0.1)
 
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
@@ -244,9 +249,11 @@ def installations_menu(button_used, previous_frame):
         with open (settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "w") as f:
             json.dump(data_json, f)
 
+    #Drawing modpacks that are already downloaded.
     for installer in os.listdir(settings.path_to_installers):
+
         if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
-            print (installer)
+            print_and_log(None, installer)
             try:
                 run = importlib.import_module(f"installers.{installer}.run")
 
@@ -265,7 +272,7 @@ def installations_menu(button_used, previous_frame):
             modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
 
             try:
-                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\fbanner.png") #Remove "f" in production version.
+                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.png") #Remove "f" in production version.
             except FileNotFoundError as e:
                 try:
                     Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.jpeg")
@@ -279,7 +286,7 @@ def installations_menu(button_used, previous_frame):
 
             Pack_Image = Pack_Image.resize((actual_width, actual_height))
             tkimage = ImageTk.PhotoImage(Pack_Image)
-            pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727")
+            pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727", cursor="hand2")
             pack_image_frame.photo = tkimage
             pack_image_frame.place(x=0, y=0)
     
@@ -311,6 +318,23 @@ def installations_menu(button_used, previous_frame):
             installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
             modpack_title=modpack_title, version_label=version_label: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label))
 
+            #Settings Button
+            settings_image = Image.open(settings.path_to_images + "modpack_settings.png")
+
+            width, height = settings_image.size
+            
+            actual_width = round(int(width)/28)
+            actual_height = round(int(height)/28)
+
+            settings_image = settings_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(settings_image)
+            settings_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", borderwidth=0, 
+            cursor="hand2")
+            settings_button.photo = tkimage
+            settings_button.place(x=196, y=200)
+
+            #Notice for later: Maybe add a rotaion effect to the settings icon.
+
             if data_json["installed"] == True:
                 hex_colour = Color("#171717")
                 colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
@@ -333,11 +357,12 @@ def installations_menu(button_used, previous_frame):
                 launch_button.photo = tkimage
                 launch_button.place(x=53, y=180)
 
-                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
                 t8.setDaemon(True)
                 t8.start()
 
             amount_of_installers =+ 1
+            downloaded_modpacks['modpacks'] = [installer.lower()] #Adds installer to avalible modpacks list.
 
 def home_menu(button_used, previous_frame):
     global home_frame
@@ -362,7 +387,7 @@ def home_menu(button_used, previous_frame):
 
 amount_of_news = 0
 
-def test(frame=None): #Wait untill module dev fixes issue.
+def webview(frame=None): #Wait untill module dev fixes issue.
     html_frame = HtmlFrame(frame)
     html_frame.load_website("https://www.google.com/") #load a website
     html_frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
@@ -470,6 +495,20 @@ def finish(thread_to_wait_for):
     activebackground="#13472D", command=app_close)   
     #close_button.pack(side=BOTTOM)
 
+def modpack_updater(option=None):
+    def check_modpacks_for_update():
+        pass
+
+    def download_update():
+        pass
+
+    if option == None:
+        option = "NORMAL"
+
+    if option.upper() == "NORMAL":
+        #Check all modpacks for updates.
+        pass
+        
 def button_hover_enter(e):
     hex_colour = Color("#1F1E1E")
     colours = list(hex_colour.range_to(Color("#C06565"),10))
@@ -502,7 +541,7 @@ def color_glow_effect(e, hex_list):
         time.sleep(0.01)
         e.widget['background'] = '{}'.format(color)
 
-def make_sound(sound):
+def play_sound(sound):
     pass
 
 def add_image_shadow(image, iterations, border, offset, backgroundColour, shadowColour):
@@ -780,7 +819,7 @@ if __name__ == '__main__':
 window.mainloop()
 
 '''
-Jascord Player Color Pallet
+Nova Hub Color Pallet
 
 1st Color: #0D1C30
 2nd Color: #354C51

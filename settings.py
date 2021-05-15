@@ -1,6 +1,6 @@
 import os
 
-version = 1.00
+version = 1.30
 development_stage = "DEV"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
