@@ -1,10 +1,17 @@
 Nova Hub:
-    ☐ Add option to uninstall modpacks.
+    ☐ Add feture to preload shader packs based on system specs.
 
-    Modpack Update Downloader:
+    Mod Pack Settings Menu:
+        ☐ Add option to uninstall modpacks.
+        ☐ Add option to change shaderpack preload options.
+
+    Mod Pack Update Downloader:
         ☐ Start working on Background update downloader. (This thread downloads updates for installed modpacks in the background of the app.)
         
 Terra Smp Installer:
     ☐ Add mc launcher profile creater code to run function.
     ☐ Remove gui and clean up the installer files a bit.
     ☐ 
+
+Terra Smp Client:
+    ☐ Start creating main menu screen for the forge client.

@@ -294,6 +294,7 @@ def installations_menu(button_used, previous_frame):
             modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
             modpack_title.place(x=0, y=135)
 
+            #Version Label
             version_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
             version_label = Label(modpack_frame, text="V" + str(ver), font=version_font, fg="#C52612", bg="#282727") #Where I left off
             version_label.place(x=0, y=233)
@@ -362,7 +363,11 @@ def installations_menu(button_used, previous_frame):
                 t8.start()
 
             amount_of_installers =+ 1
-            downloaded_modpacks['modpacks'] = [installer.lower()] #Adds installer to avalible modpacks list.
+            downloaded_modpacks['modpacks'][installer.lower()] = {} #Adds installer to avalible modpacks list.
+            downloaded_modpacks['modpacks'][installer.lower()]['ver'] = ver
+
+            t3=threading.Thread(target=modpack_updater, args=(["NORMAL"]))
+            t3.start()
 
 def home_menu(button_used, previous_frame):
     global home_frame
@@ -497,8 +502,21 @@ def finish(thread_to_wait_for):
 
 def modpack_updater(option=None):
     def check_modpacks_for_update():
-        pass
+        print_and_log(None, downloaded_modpacks)
 
+        #Check for updates.
+        for mod_pack in downloaded_modpacks['modpacks']:
+
+            #Look for that modpack's current version on webserver.
+            with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
+                data_json = json.loads(url.read().decode())
+                ver = data_json['packs'][modpack]['ver']
+
+            #Decide if it needs an update or not.
+            if ver > mod_pack['ver']:
+                #Update the pack.
+                download_update()
+            
     def download_update():
         pass
 
@@ -507,6 +525,7 @@ def modpack_updater(option=None):
 
     if option.upper() == "NORMAL":
         #Check all modpacks for updates.
+        check_modpacks_for_update()
         pass
         
 def button_hover_enter(e):
@@ -788,6 +807,7 @@ def app_close():
 
 def start_up():
     nav_bar() #Loads Nav Bar
+
 
 t1=threading.Thread(target=start_up)
 t1.setDaemon(True)

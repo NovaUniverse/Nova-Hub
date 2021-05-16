@@ -4,10 +4,11 @@ version = 1.30
 development_stage = "DEV"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
-#Be careful when changing json location. If you type a false location auto update will stop functioning.
+#Be careful when changing the locations. If you type a false location auto update will stop functioning.
 api = "http://192.168.1.176"
 nova_hub_json_location = "/files/nova_hub.json" #Where the json file is stored on the webserver.
 nova_hub_update_package_location = "/files/update.zip" #Where the update package is stored on the webserver.
+mod_pack_installers_location = "/files/installers"
 
 nova_universe_url = "https://www.youtube.com/c/TheGoldenPro" #Change this to novauniverse website domain.
 
