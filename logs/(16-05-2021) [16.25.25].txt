@@ -1,4 +1,0 @@
-(16.25.26) Terra_Smp
-(16.25.27) {'modpacks': {'terra_smp': {'ver': 2.0}}}
-(16.36.17) Terra_Smp
-(16.36.17) {'modpacks': {'terra_smp': {'ver': 2.0}}}

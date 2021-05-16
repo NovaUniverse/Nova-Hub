@@ -1,2 +1,0 @@
-(16.16.48) Terra_Smp
-(16.16.48) {'modpacks': ['terra_smp']}
