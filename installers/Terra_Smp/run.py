@@ -469,7 +469,7 @@ def run(option=None): #This is the main run script that actualy runs the script 
           "javaArgs" : "-Xmx3G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
           "lastUsed" : "1970-01-01T00:00:00.000Z",
           "lastVersionId" : "1.12.2-forge-14.23.5.2854",
-          "name" : "Terra Smp - v1.00",
+          "name" : "Terra Smp - v2.00",
           "type" : "custom"
 
         '''

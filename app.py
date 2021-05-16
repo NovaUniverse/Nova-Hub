@@ -151,29 +151,29 @@ def installations_menu(button_used, previous_frame):
             modpack_title.config(fg="{}".format(colour)) #Title
             version_label.config(fg="{}".format(colour)) #Version Label
 
-    def zoom_in_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label):
+    def zoom_in_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button):
 
         pass
 
-    def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title, version_label):
+    def install_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
         hex_colour = Color("#282727")
         colours = list(hex_colour.range_to(Color("#C06565"), 12))
 
         hex_colour = Color("#C52612") #Text
         colours_text = list(hex_colour.range_to(Color("black"), 12))
         
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
-    def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label):
+    def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
         hex_colour = Color("#C06565")
         colours = list(hex_colour.range_to(Color("#282727"), 20))
 
         hex_colour = Color("black") #Text
         colours_text = list(hex_colour.range_to(Color("#C52612"), 20))
         
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, colours, colours_text]))
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
 
@@ -299,6 +299,21 @@ def installations_menu(button_used, previous_frame):
             version_label = Label(modpack_frame, text="V" + str(ver), font=version_font, fg="#C52612", bg="#282727") #Where I left off
             version_label.place(x=0, y=233)
 
+            #Settings Button
+            settings_image = Image.open(settings.path_to_images + "modpack_settings.png")
+
+            width, height = settings_image.size
+            
+            actual_width = round(int(width)/28)
+            actual_height = round(int(height)/28)
+
+            settings_image = settings_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(settings_image)
+            settings_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", borderwidth=0, 
+            cursor="hand2")
+            settings_button.photo = tkimage
+            settings_button.place(x=196, y=200)
+
             install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
 
             width, height = install_image.size
@@ -315,24 +330,9 @@ def installations_menu(button_used, previous_frame):
             installs_button.photo = tkimage
             installs_button.place(x=53, y=180)
             installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-            modpack_title=modpack_title, version_label=version_label: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label))
+            modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
             installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-            modpack_title=modpack_title, version_label=version_label: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label))
-
-            #Settings Button
-            settings_image = Image.open(settings.path_to_images + "modpack_settings.png")
-
-            width, height = settings_image.size
-            
-            actual_width = round(int(width)/28)
-            actual_height = round(int(height)/28)
-
-            settings_image = settings_image.resize((actual_width, actual_height))
-            tkimage = ImageTk.PhotoImage(settings_image)
-            settings_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", borderwidth=0, 
-            cursor="hand2")
-            settings_button.photo = tkimage
-            settings_button.place(x=196, y=200)
+            modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
             #Notice for later: Maybe add a rotaion effect to the settings icon.
 
@@ -510,7 +510,7 @@ def modpack_updater(option=None):
             #Look for that modpack's current version on webserver.
             with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
                 data_json = json.loads(url.read().decode())
-                ver = data_json['packs'][modpack]['ver']
+                ver = data_json['packs'][mod_pack]['ver']
 
             #Decide if it needs an update or not.
             if ver > mod_pack['ver']:
