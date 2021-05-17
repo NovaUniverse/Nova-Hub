@@ -97,7 +97,6 @@ def check_for_update():
     if ver <= settings.version: #Up to date
         nova_func.print_and_log("INFO", "Nova Hub is up to date. It's currently on version {}".format(str(ver)))
         
-
 def update_app(mode):
     import nova_func
     
@@ -128,6 +127,24 @@ def update_app(mode):
 
         del nova_func
 
+def check_nova_hub_appdata_folder():
+    if not "#.nova_hub" in nova_func.check_dir(f"{settings.appdata_dir}\\.NovaUniverse"):
+        #Create #.novc_hub folder.
+        nova_func.create_nova_hub_appdata_folder()
+
+        #Find the nova_universe directory.
+        import nova_dir
+        path = nova_dir.Nova_Dir.get_nova_universe_directory()
+        del nova_dir
+
+        #Download user_settings.json template from webserver.
+        with urllib.request.urlopen(settings.api + settings.user_settings_json_template_location) as url:
+            template_json = json.loads(url.read().decode())
+
+        with open(path + "\\#.nova_hub\\user_settings.json", 'w') as f:
+            json.dump(template_json, f)
+
+        
 def run_update_service():
     pass
 
@@ -175,6 +192,9 @@ window.resizable(False, False) #Makes window not resizeable
 if __name__ == '__main__':
     check_for_update()
     window.destroy() #Kills Update Window
+
+    t2=threading.Thread(target=check_nova_hub_appdata_folder)
+    t2.start()
 
     t1 = threading.Thread(target=launch_app, args=([]))
     t1.start()

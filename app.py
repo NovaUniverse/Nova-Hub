@@ -14,9 +14,10 @@ import json
 import importlib
 from tkinterweb import HtmlFrame
 import urllib.request
+import requests
 
 import settings
-from nova_func import print_and_log
+from nova_func import check_modpack, print_and_log, create_nova_hub_appdata_folder
 
 app_name = settings.app_name
 
@@ -177,7 +178,7 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
-    def install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, installer, run, run_option):
+    def install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, installer, run, run_option):
         def finish_effect():
             time.sleep(2)
             
@@ -249,9 +250,24 @@ def installations_menu(button_used, previous_frame):
         with open (settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "w") as f:
             json.dump(data_json, f)
 
-    #Drawing modpacks that are already downloaded.
-    for installer in os.listdir(settings.path_to_installers):
+    #Drawing modpacks from web server.
 
+    with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
+        nova_hub_json = json.loads(url.read().decode())
+
+        modpack_list = nova_hub_json["packs"]
+        print_and_log(None, modpack_list) #Debuging
+
+    for mod_pack in modpack_list:
+        is_modpack_installed = False
+
+        pack_version = nova_hub_json["packs"][mod_pack]["ver"]
+
+        display_name = nova_hub_json["packs"][mod_pack]["names"]["display_name"]
+        code_name = nova_hub_json["packs"][mod_pack]["names"]["code_name"]
+        folder_name = nova_hub_json["packs"][mod_pack]["names"]["folder_name"]
+
+        '''
         if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
             print_and_log(None, installer)
             try:
@@ -267,53 +283,83 @@ def installations_menu(button_used, previous_frame):
 
             except Exception as e:
                 ver = 0
+        '''
 
-            modpack_frame = Frame(installations_frame, width=240, height=250, bg="#282727")
-            modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
+        modpack_frame = Frame(installations_frame, width=264, height=280, bg="#282727")
+        modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
 
+        #Mod Pack Banner
+        try:
+            Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.png", stream=True).raw)
+        except FileNotFoundError as e:
             try:
-                Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.png") #Remove "f" in production version.
-            except FileNotFoundError as e:
-                try:
-                    Pack_Image = Image.open(settings.path_to_installers + installer + "\\#.nova_hub\\banner.jpeg")
-                except Exception as e:
-                    Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
+                Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.jpeg", stream=True).raw)
+            except Exception as e:
+                Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
 
-            width, height = Pack_Image.size
-            
-            actual_width = round(int(width)/8.12)
-            actual_height = round(int(height)/8.12)
+        width, height = Pack_Image.size
+        
+        actual_width = round(int(width)/7.39)
+        actual_height = round(int(height)/7.39)
 
-            Pack_Image = Pack_Image.resize((actual_width, actual_height))
-            tkimage = ImageTk.PhotoImage(Pack_Image)
-            pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727", cursor="hand2")
-            pack_image_frame.photo = tkimage
-            pack_image_frame.place(x=0, y=0)
-    
-            modpack_title_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-            modpack_title = Label(modpack_frame, text=installer.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
-            modpack_title.place(x=0, y=135)
+        Pack_Image = Pack_Image.resize((actual_width, actual_height))
+        tkimage = ImageTk.PhotoImage(Pack_Image)
+        pack_image_frame = Label(modpack_frame, image=tkimage, bg="#282727", cursor="hand2")
+        pack_image_frame.photo = tkimage
+        pack_image_frame.place(x=0, y=0)
 
-            #Version Label
-            version_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
-            version_label = Label(modpack_frame, text="V" + str(ver), font=version_font, fg="#C52612", bg="#282727") #Where I left off
-            version_label.place(x=0, y=233)
+        #Title Label
+        modpack_title_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+        modpack_title = Label(modpack_frame, text=display_name.upper().replace("_", " "), font=modpack_title_font, fg="#C52612", bg="#282727") #Where I left off
+        modpack_title.place(x=0, y=150)
 
-            #Settings Button
-            settings_image = Image.open(settings.path_to_images + "modpack_settings.png")
+        #Version Label
+        version_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
+        version_label = Label(modpack_frame, text="V" + str(pack_version), font=version_font, fg="#C52612", bg="#282727") #Where I left off
+        version_label.place(x=0, y=263)
 
-            width, height = settings_image.size
-            
-            actual_width = round(int(width)/28)
-            actual_height = round(int(height)/28)
+        #Settings Button
+        settings_image = Image.open(settings.path_to_images + "modpack_settings.png")
 
-            settings_image = settings_image.resize((actual_width, actual_height))
-            tkimage = ImageTk.PhotoImage(settings_image)
-            settings_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", borderwidth=0, 
-            cursor="hand2")
-            settings_button.photo = tkimage
-            settings_button.place(x=196, y=200)
+        width, height = settings_image.size
+        
+        actual_width = round(int(width)/28)
+        actual_height = round(int(height)/28)
 
+        settings_image = settings_image.resize((actual_width, actual_height))
+        tkimage = ImageTk.PhotoImage(settings_image)
+        settings_button = Button(modpack_frame, image=tkimage, bg="#282727", activebackground="#282727", borderwidth=0, cursor="hand2")
+        settings_button.photo = tkimage
+        settings_button.place(x=213, y=230)
+
+        #Grey Install Button
+        grey_install_image = Image.open(settings.path_to_images + "greyed_install_button.png")
+
+        width, height = grey_install_image.size
+        
+        actual_width = round(int(width)/14)
+        actual_height = round(int(height)/14)
+
+        grey_install_image = grey_install_image.resize((actual_width, actual_height))
+        tkimage = ImageTk.PhotoImage(grey_install_image)
+        install_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#282727", borderwidth=0, 
+        cursor="hand2")
+        install_button.config(command=None)
+        install_button.photo = tkimage
+        install_button.place(x=64, y=210)
+
+        is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
+
+        if is_script_downloaded == True:
+            #Import run.py from script.
+            print_and_log(None, mod_pack)
+            try:
+                run = importlib.import_module(f"installers.{mod_pack}.run")
+
+            except Exception as e:
+                pass
+
+            #Install Button
             install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
 
             width, height = install_image.size
@@ -326,48 +372,50 @@ def installations_menu(button_used, previous_frame):
             installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
             cursor="hand2")
             installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, version_label=version_label, modpack_title=modpack_title, 
-            installer=installer, run=run, run_option="NORMAL" : install(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, installer, run, "NORMAL"))
+            mod_pack=mod_pack, run=run, run_option="NORMAL" : install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, mod_pack, run, "NORMAL"))
             installs_button.photo = tkimage
-            installs_button.place(x=53, y=180)
+            installs_button.place(x=64, y=210)
             installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
             modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
             installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
             modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
-            #Notice for later: Maybe add a rotaion effect to the settings icon.
+        #Notice for later: Maybe add a rotaion effect to the settings icon.
 
-            if data_json["installed"] == True:
-                hex_colour = Color("#171717")
-                colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
+        is_modpack_installed = check_modpack.is_installed(None, folder_name)
 
-                hex_colour = Color("#C52612") #Text
-                colours_text = list(hex_colour.range_to(Color("black"), 12))
+        if is_modpack_installed == True:
+            hex_colour = Color("#171717")
+            colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
 
-                launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+            hex_colour = Color("#C52612") #Text
+            colours_text = list(hex_colour.range_to(Color("black"), 12))
 
-                width, height = launch_image.size
-                
-                actual_width = round(int(width)/14)
-                actual_height = round(int(height)/14)
+            launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
 
-                launch_image = launch_image.resize((actual_width, actual_height))
-                tkimage = ImageTk.PhotoImage(launch_image)
-                launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
-                cursor="hand2")
-                launch_button.config(command=launch)
-                launch_button.photo = tkimage
-                launch_button.place(x=53, y=180)
+            width, height = launch_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
 
-                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
-                t8.setDaemon(True)
-                t8.start()
+            launch_image = launch_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(launch_image)
+            launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+            cursor="hand2")
+            launch_button.config(command=launch)
+            launch_button.photo = tkimage
+            launch_button.place(x=53, y=180)
 
-            amount_of_installers =+ 1
-            downloaded_modpacks['modpacks'][installer.lower()] = {} #Adds installer to avalible modpacks list.
-            downloaded_modpacks['modpacks'][installer.lower()]['ver'] = ver
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+            t8.setDaemon(True)
+            t8.start()
 
-            t3=threading.Thread(target=modpack_updater, args=(["NORMAL"]))
-            t3.start()
+        amount_of_installers =+ 1
+        downloaded_modpacks['modpacks'][mod_pack.lower()] = {} #Adds installer to avalible modpacks list.
+        downloaded_modpacks['modpacks'][mod_pack.lower()]['ver'] = pack_version
+
+        t3=threading.Thread(target=modpack_updater, args=(["NORMAL"]))
+        t3.start()
 
 def home_menu(button_used, previous_frame):
     global home_frame
@@ -513,11 +561,13 @@ def modpack_updater(option=None):
                 ver = data_json['packs'][mod_pack]['ver']
 
             #Decide if it needs an update or not.
-            if ver > mod_pack['ver']:
+            if int(ver) > int(downloaded_modpacks['modpacks'][mod_pack]['ver']):
+
                 #Update the pack.
                 download_update()
-            
+
     def download_update():
+        #Where I left off
         pass
 
     if option == None:
@@ -807,7 +857,6 @@ def app_close():
 
 def start_up():
     nav_bar() #Loads Nav Bar
-
 
 t1=threading.Thread(target=start_up)
 t1.setDaemon(True)

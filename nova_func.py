@@ -299,3 +299,40 @@ def create_mc_launcher_profile():
 
     except Exception as e:
         pass
+
+def create_nova_hub_appdata_folder():
+    import settings
+
+    try:
+        #Create .NovaUniverse
+        path = f"{settings.appdata_dir}\\.NovaUniverse"
+        create_folder(path)
+
+        #Create #.nova_hub
+        create_folder(path + "\\#.nova_hub")
+
+    except Exception as e:
+        print_and_log("ERROR", e)
+        return False
+
+class check_modpack:
+
+    def is_installed(self, modpack_folder_name):
+        import nova_dir
+
+        path = nova_dir.Nova_Dir.get_nova_universe_directory()
+        if modpack_folder_name in check_dir(path):
+            return True
+
+        else:
+            return False
+
+    def is_script_downloaded(self, modpack_code_name):
+        import settings
+
+        path = settings.path_to_installers
+        del settings
+        if modpack_code_name in check_dir(path):
+            return True
+        else:
+            return False
