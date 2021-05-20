@@ -15,9 +15,12 @@ import importlib
 from tkinterweb import HtmlFrame
 import urllib.request
 import requests
+from tkhtmlview import HTMLLabel
+import emoji
+import psutil
 
 import settings
-from nova_func import check_modpack, print_and_log, create_nova_hub_appdata_folder
+from nova_func import *
 
 app_name = settings.app_name
 
@@ -28,6 +31,8 @@ live_installer_status = "Starting Live Install Status Thread..."
 
 downloaded_modpacks = {}
 downloaded_modpacks['modpacks'] = {}
+
+installs_button = None #Installs button needs to be global so I can choose not disble it when I'm looping through all of them in mod pack settings menu.
 
 def live_run_status(run, modpack_frame): #Updates
     global live_installer_status
@@ -70,6 +75,7 @@ t4.setDaemon(True)
 def nav_bar():
     global installations_menu
     global home_frame
+    global installs_button
 
     nav_bar = Frame(main_frame, width=window.winfo_width(), height=window.winfo_height() / 18, bg="#3D0000") #NavBar
     nav_bar.pack(side="top", fill=BOTH)
@@ -96,6 +102,7 @@ def nav_bar():
     buttons_bar = Frame(nav_bar, width=10, height=30, bg="#9F1F0F") #NavBar
     buttons_bar.pack(side="top", fill=BOTH)
 
+    #Home Button
     home_button = Button(buttons_bar, text="Home", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2", command=lambda: home_menu(home_button, installations_frame)) 
     home_button.grid(row=0, column=1, padx=15)
@@ -103,7 +110,8 @@ def nav_bar():
     home_button.bind("<Leave>", button_hover_leave)
 
     home_menu(home_button, None)
-
+    
+    #Installations Button
     installs_button = Button(buttons_bar, text="Installations", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2", command=lambda: installations_menu(installs_button, home_frame))
     installs_button.grid(row=0, column=2)
@@ -256,7 +264,6 @@ def installations_menu(button_used, previous_frame):
         nova_hub_json = json.loads(url.read().decode())
 
         modpack_list = nova_hub_json["packs"]
-        print_and_log(None, modpack_list) #Debuging
 
     for mod_pack in modpack_list:
         is_modpack_installed = False
@@ -291,7 +298,7 @@ def installations_menu(button_used, previous_frame):
         #Mod Pack Banner
         try:
             Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.png", stream=True).raw)
-        except FileNotFoundError as e:
+        except Exception as e:
             try:
                 Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.jpeg", stream=True).raw)
             except Exception as e:
@@ -329,6 +336,8 @@ def installations_menu(button_used, previous_frame):
         settings_image = settings_image.resize((actual_width, actual_height))
         tkimage = ImageTk.PhotoImage(settings_image)
         settings_button = Button(modpack_frame, image=tkimage, bg="#282727", activebackground="#282727", borderwidth=0, cursor="hand2")
+        settings_button.config(command=lambda installations_frame=installations_frame, display_name=display_name, folder_name=folder_name : 
+        modpack_settings_menu(installations_frame, display_name, folder_name))
         settings_button.photo = tkimage
         settings_button.place(x=213, y=230)
 
@@ -372,7 +381,7 @@ def installations_menu(button_used, previous_frame):
             installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
             cursor="hand2")
             installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, version_label=version_label, modpack_title=modpack_title, 
-            mod_pack=mod_pack, run=run, run_option="NORMAL" : install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, mod_pack, run, "NORMAL"))
+            settings_button=settings_button, mod_pack=mod_pack, run=run, run_option="NORMAL" : install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, mod_pack, run, "NORMAL"))
             installs_button.photo = tkimage
             installs_button.place(x=64, y=210)
             installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
@@ -400,13 +409,13 @@ def installations_menu(button_used, previous_frame):
 
             launch_image = launch_image.resize((actual_width, actual_height))
             tkimage = ImageTk.PhotoImage(launch_image)
-            launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+            installs_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
             cursor="hand2")
-            launch_button.config(command=launch)
-            launch_button.photo = tkimage
-            launch_button.place(x=53, y=180)
+            installs_button.config(command=launch)
+            installs_button.photo = tkimage
+            installs_button.place(x=64, y=210)
 
-            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, launch_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
             t8.setDaemon(True)
             t8.start()
 
@@ -435,15 +444,91 @@ def home_menu(button_used, previous_frame):
     #news_feed_drawer(home_frame, "Help me, I've been coding for 4 hours.", ("IMPORTANT"), "Goldy", (19, "May", "10 Seconds ago"), 
     #"I honestly think zeeraa should give me all his dogecoin in return of coding this app. I will spend it very wisely :D ")
 
-    news_feed_drawer(home_frame, "NOVA HUB NEWS FEED COMING IN A LATER UPDATE...", ("IMPORTANT"), "Goldy", (2, "May", "∞ Seconds ago"), 
-    "There's no actual news here becasue the module that allows me to easily grab the news currently has a bug with 64bit operating systems. Once this bug is fixed by the module owner I will release an update that enables the news feed.")
+    news_feed_drawer(home_frame, "NOVA HUB NEWS FEED COMING SOON...", ("IMPORTANT"), "Goldy", (18, "May", "∞ Seconds ago"), 
+    emoji.emojize("Zzzz.. Currently waiting for Zeeraa to finish the news letter system."))
+
+    #webview_v2(home_frame, "https://novauniverse.net/api/private/hub/news_letter/")
 
 amount_of_news = 0
 
-def webview(frame=None): #Wait untill module dev fixes issue.
+def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
+    if not previous_frame == None:
+        previous_frame.pack_forget()
+
+    for button in settings.button_list:
+        if not button == installs_button:
+            make_unclickable(button) #Disables all buttons.
+
+    modpack_settings_frame = Frame(main_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
+    modpack_settings_frame.pack(fill=BOTH, expand=2, padx=20, pady=15)
+
+    #Mod Pack Name
+    pack_name_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
+    pack_name_label = Label(modpack_settings_frame, text=pack_name.upper() + " SETTINGS", font=pack_name_font, fg="#D46757", bg="#282727")
+    pack_name_label.pack(fill=X)
+
+    #Back Button
+    back_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+    back_button = Button(modpack_settings_frame, text="Back", font=back_button_font, padx=10, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2", command=lambda: installations_menu(installs_button, modpack_settings_frame))
+    back_button.pack(pady=10)
+    back_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
+    back_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
+
+    #Memory Allocation Bar
+    memory_allocation_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
+    memory_allocation_frame.pack(fill=X, padx=20, pady=0)
+
+    ma_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    ma_text_label = Label(memory_allocation_frame, text="Memory Allocation (RAM)", font=ma_text_font, fg="#C52612", bg="#171717")
+    ma_text_label.pack()
+
+    def edit_ram_text(e):
+        amount_of_ram = get_size(int(e))
+        ma_ram_text_label.config(text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)")
+
+    ma_slider_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    ma_slider = Scale(memory_allocation_frame, font=ma_slider_font, fg="white", from_=1073741824, to=psutil.virtual_memory().total, length=500, sliderlength=40, orient=HORIZONTAL, 
+    bg="#171717", troughcolor="#171717", cursor="hand2", activebackground="#C52612", highlightthickness=0, bd=3, showvalue=False, command=edit_ram_text)
+    ma_slider.pack(fill=X, padx=20, pady=5)
+
+    is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
+
+    if not is_modpack_installed == True: #Disable Slider if mod pack is not installed.
+        ma_slider.config(state="disabled")
+
+    max_amount_of_ram = get_size(psutil.virtual_memory().total)
+    
+    #2GB #Replace these two lines with code that reads from mc launcher versions txt.
+    amount_of_ram = get_size(2147483648) 
+    ma_slider.set(2147483648)
+
+    ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    ma_ram_text_label = Label(memory_allocation_frame, text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)", font=ma_ram_text_font, fg="white", bg="#171717")
+    ma_ram_text_label.pack()
+
+
+def webview(frame=None, url=None): #Wait untill module dev fixes issue.
     html_frame = HtmlFrame(frame)
-    html_frame.load_website("https://www.google.com/") #load a website
+    html_frame.load_website(url) #load a website
     html_frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
+
+def webview_v2(frame=None, url=None):
+    headers = {'User-Agent': str(settings.app_name)}
+
+    request = urllib.request.Request(
+        url, 
+        data=None, 
+        headers=headers
+    )
+
+    website = urllib.request.urlopen(request)
+    mybytes = website.read()
+    html = mybytes.decode("utf8")
+    website.close()
+
+    web_label = HTMLLabel(frame, html=html)
+    web_label.pack(fill="both")
     
 def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_des):
     #frame = Tkinter frame to draw to.
@@ -550,7 +635,6 @@ def finish(thread_to_wait_for):
 
 def modpack_updater(option=None):
     def check_modpacks_for_update():
-        print_and_log(None, downloaded_modpacks)
 
         #Check for updates.
         for mod_pack in downloaded_modpacks['modpacks']:
@@ -578,17 +662,32 @@ def modpack_updater(option=None):
         check_modpacks_for_update()
         pass
         
-def button_hover_enter(e):
-    hex_colour = Color("#1F1E1E")
-    colours = list(hex_colour.range_to(Color("#C06565"),10))
+def button_hover_enter(e, start_colour=None, end_colour=None):
+
+    if start_colour == None:
+        hex_colour = Color("#1F1E1E")
+    else:
+        hex_colour = Color(start_colour)
+    
+    if end_colour == None:
+        colours = list(hex_colour.range_to(Color("#C06565"),10))
+    else:
+        colours = list(hex_colour.range_to(Color(end_colour),10))
     
     t7=threading.Thread(target=color_glow_effect, args=([e, colours]))
     t7.setDaemon(True)
     t7.start()
 
-def button_hover_leave(e):
-    hex_colour = Color("#C06565")
-    colours = list(hex_colour.range_to(Color("#1F1E1E"),10))
+def button_hover_leave(e, start_colour=None, end_colour=None):
+    if start_colour == None:
+        hex_colour = Color("#C06565")
+    else:
+        hex_colour = Color(start_colour)
+    
+    if end_colour == None:
+        colours = list(hex_colour.range_to(Color("#1F1E1E"),10))
+    else:
+        colours = list(hex_colour.range_to(Color(end_colour),10))
 
     t7=threading.Thread(target=color_glow_effect, args=([e, colours]))
     t7.setDaemon(True)
