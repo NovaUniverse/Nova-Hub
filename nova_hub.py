@@ -90,12 +90,13 @@ def check_for_update():
 
         #End of update
 
-        nova_func.print_and_log("INFO", "Nova Hub done updating to version {}".format(str(ver)))
+        nova_func.print_and_log("INFO_2", "Nova Hub done updating to version {}".format(str(ver)))
 
     import settings
 
     if ver <= settings.version: #Up to date
-        nova_func.print_and_log("INFO", "Nova Hub is up to date. It's currently on version {}".format(str(ver)))
+        nova_func.print_and_log("INFO", "Nova Hub is up to date. Your on version {}".format(str(ver)))
+        live_status_text.config(text="Up to Date")
         
 def update_app(mode):
     import nova_func
@@ -143,7 +144,6 @@ def check_nova_hub_appdata_folder():
 
         with open(path + "\\#.nova_hub\\user_settings.json", 'w') as f:
             json.dump(template_json, f)
-
         
 def run_update_service():
     pass
@@ -188,18 +188,28 @@ window.iconbitmap(settings.path_to_assets + "update_icon.ico")
 window.geometry('800x200')
 window.resizable(False, False) #Makes window not resizeable
 
-
 if __name__ == '__main__':
     check_for_update()
-    window.destroy() #Kills Update Window
 
-    t2=threading.Thread(target=check_nova_hub_appdata_folder)
-    t2.start()
+    import nova_dir
+    from nova_func import print_and_log
 
-    t1 = threading.Thread(target=launch_app, args=([]))
-    t1.start()
+    if nova_dir.Nova_Dir.is_supported() == None: #If app is supported by OS.
+        update_image_label.pack_forget()
+        update_text.config(text="Sorry for the inconvenience but Nova Hub does not\n support your OS. We only support Windows atm\n but we'll be supporting Linix next.", 
+        fg="red", pady=45)
+        print_and_log("ERROR", "Sorry for the inconvenience but Nova Hub does not support your OS. We only support Windows atm but we'll be supporting Linix next. \n")
 
-    t11 = threading.Thread(target=focus_on_app)
-    t11.start()
+    else:
+        window.destroy() #Kills Update Window
+
+        t2=threading.Thread(target=check_nova_hub_appdata_folder)
+        t2.start()
+
+        t1 = threading.Thread(target=launch_app, args=([]))
+        t1.start()
+
+        t11 = threading.Thread(target=focus_on_app)
+        t11.start()
 
 window.mainloop()

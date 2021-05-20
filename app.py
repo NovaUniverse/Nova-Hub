@@ -22,6 +22,9 @@ import psutil
 import settings
 from nova_func import *
 
+import ctypes
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
+
 app_name = settings.app_name
 
 ver_v = "V" + str(settings.version)
@@ -274,24 +277,6 @@ def installations_menu(button_used, previous_frame):
         code_name = nova_hub_json["packs"][mod_pack]["names"]["code_name"]
         folder_name = nova_hub_json["packs"][mod_pack]["names"]["folder_name"]
 
-        '''
-        if "#.nova_hub" in os.listdir(settings.path_to_installers + installer + "\\"):
-            print_and_log(None, installer)
-            try:
-                run = importlib.import_module(f"installers.{installer}.run")
-
-            except Exception as e:
-                pass
-
-            try:
-                with open(settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "r") as f:
-                    data_json = json.load(f)
-                    ver = data_json["version"]
-
-            except Exception as e:
-                ver = 0
-        '''
-
         modpack_frame = Frame(installations_frame, width=264, height=280, bg="#282727")
         modpack_frame.grid(row=0, column=1 + amount_of_installers, padx=15, pady=15)
 
@@ -361,11 +346,15 @@ def installations_menu(button_used, previous_frame):
 
         if is_script_downloaded == True:
             #Import run.py from script.
-            print_and_log(None, mod_pack)
+            print_and_log("info_2", f"Install script for {display_name} has been found.")
+
             try:
+                print_and_log(None, f"Importing {display_name} Script...\n")
                 run = importlib.import_module(f"installers.{mod_pack}.run")
 
             except Exception as e:
+                print_and_log("error", e)
+                #Where I left off (20/05/2021)
                 pass
 
             #Install Button
@@ -492,11 +481,6 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
     bg="#171717", troughcolor="#171717", cursor="hand2", activebackground="#C52612", highlightthickness=0, bd=3, showvalue=False, command=edit_ram_text)
     ma_slider.pack(fill=X, padx=20, pady=5)
 
-    is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
-
-    if not is_modpack_installed == True: #Disable Slider if mod pack is not installed.
-        ma_slider.config(state="disabled")
-
     max_amount_of_ram = get_size(psutil.virtual_memory().total)
     
     #2GB #Replace these two lines with code that reads from mc launcher versions txt.
@@ -506,6 +490,18 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
     ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
     ma_ram_text_label = Label(memory_allocation_frame, text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)", font=ma_ram_text_font, fg="white", bg="#171717")
     ma_ram_text_label.pack()
+
+    is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
+
+
+
+    #Stuff to disable if mod pack is not installed.
+    if not is_modpack_installed == True:
+        #Memory Allocation Bar
+        ma_slider.config(state="disabled") #Disable Slider if mod pack is not installed.
+        ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=True)
+        ma_ram_text_label.config(text="MOD PACK NOT INSTALLED", font=ma_ram_text_font, fg="grey")
+
 
 
 def webview(frame=None, url=None): #Wait untill module dev fixes issue.
@@ -984,6 +980,7 @@ if __name__ == '__main__':
     warning_label = Label(main_frame, text=":( Please run Nova_Hub.exe/py when launching Nova Hub instead of just attempting to run the app.py.", font=warning_font, fg="#C52612", bg="#282727")
     warning_label.pack(fill=BOTH)
 
+#window.withdraw() #Removes console
 window.mainloop()
 
 '''

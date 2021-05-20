@@ -58,7 +58,7 @@ class Nova_Dir:
 
 	@staticmethod
 	def is_supported():
-		return Nova_Dir.get_game_directory() != None
+		return Nova_Dir.get_nova_universe_directory() != None
 
 #Open user_settings.json
 path = Nova_Dir.get_nova_universe_directory()
