@@ -18,6 +18,7 @@ import requests
 from tkhtmlview import HTMLLabel
 import emoji
 import psutil
+import math
 
 import settings
 from nova_func import *
@@ -448,6 +449,10 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
         if not button == installs_button:
             make_unclickable(button) #Disables all buttons.
 
+    #Global Varibles
+    stop_at_common_values = 0
+    ma_checkbox_value = 0
+
     modpack_settings_frame = Frame(main_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
     modpack_settings_frame.pack(fill=BOTH, expand=2, padx=20, pady=15)
 
@@ -472,28 +477,53 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
     ma_text_label = Label(memory_allocation_frame, text="Memory Allocation (RAM)", font=ma_text_font, fg="#C52612", bg="#171717")
     ma_text_label.pack()
 
+    def set_slider(value_to_set):
+        ma_slider.set(int(value_to_set))
+
     def edit_ram_text(e):
         amount_of_ram = get_size(int(e))
         ma_ram_text_label.config(text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)")
 
+        #2GB, 3GB, 4GB, 6GB, 8GB, 10GB, 12GB, 16GB
+        values_to_stop_at = [2147483648, 3221225472]
+
+        stop_at_common_values = ma_checkbox_var.get()
+
+        if int(stop_at_common_values) == 1: #1=True, 0=False
+            for ram_value in values_to_stop_at:
+
+                if math.isclose(ram_value, int(e), abs_tol=40000000) == True:
+                    print("yo suck ma coc#")
+                    print(str(ram_value) + "\n")
+
+                    t11=threading.Thread(target=set_slider, args=([ram_value]))
+                    t11.start()
+
+                    time.sleep(0.1)
+
     ma_slider_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
     ma_slider = Scale(memory_allocation_frame, font=ma_slider_font, fg="white", from_=1073741824, to=psutil.virtual_memory().total, length=500, sliderlength=40, orient=HORIZONTAL, 
-    bg="#171717", troughcolor="#171717", cursor="hand2", activebackground="#C52612", highlightthickness=0, bd=3, showvalue=False, command=edit_ram_text)
+    bg="#171717", troughcolor="#171717", cursor="hand2", activebackground="#C52612", highlightthickness=0, bd=3, showvalue=False, resolution=10000, command=edit_ram_text)
     ma_slider.pack(fill=X, padx=20, pady=5)
 
     max_amount_of_ram = get_size(psutil.virtual_memory().total)
     
-    #2GB #Replace these two lines with code that reads from mc launcher versions txt.
-    amount_of_ram = get_size(2147483648) 
+    #Replace these three lines with code that reads from mc launcher versions txt.
+    amount_of_ram = get_size(2147483648) #2GB
     ma_slider.set(2147483648)
+    stop_at_common_values = False
 
     ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
     ma_ram_text_label = Label(memory_allocation_frame, text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)", font=ma_ram_text_font, fg="white", bg="#171717")
     ma_ram_text_label.pack()
 
+    ma_checkbox_var = IntVar()
+    ma_checkbox_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
+    ma_checkbox = Checkbutton(memory_allocation_frame, text="Stick to Common\n Values (ALPHA)", font=ma_checkbox_font, variable=ma_checkbox_var, bg="#171717", fg="#D46757", cursor="hand2", 
+    activebackground="#171717")
+    ma_checkbox.place(x=680, y=0)
+
     is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
-
-
 
     #Stuff to disable if mod pack is not installed.
     if not is_modpack_installed == True:
