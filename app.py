@@ -12,7 +12,6 @@ from colour import Color
 import webbrowser
 import json
 import importlib
-from tkinterweb import HtmlFrame
 import urllib.request
 import requests
 from tkhtmlview import HTMLLabel
@@ -24,7 +23,7 @@ import settings
 from nova_func import *
 
 import ctypes
-ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
+#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
 
 app_name = settings.app_name
 
@@ -38,7 +37,7 @@ downloaded_modpacks['modpacks'] = {}
 
 installs_button = None #Installs button needs to be global so I can choose not disble it when I'm looping through all of them in mod pack settings menu.
 
-def live_run_status(run, modpack_frame): #Updates
+def live_run_status(run, frame): #Updates
     global live_installer_status
     global lrs
     global progress
@@ -222,10 +221,7 @@ def installations_menu(button_used, previous_frame):
             launch_button.photo = tkimage
 
             t8.join()
-            launch_button.place(x=53, y=180)
-
-        with open(settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "r") as f:
-            data_json = json.load(f)
+            launch_button.place(x=64, y=210)
 
         #Install Effect
         hex_colour = Color("#C06565")
@@ -257,12 +253,7 @@ def installations_menu(button_used, previous_frame):
         t9.setDaemon(True)
         t9.start()
 
-        data_json["installed"] = True
-
-        with open (settings.path_to_installers + installer + "\\#.nova_hub" + "\\" + "data.json", "w") as f:
-            json.dump(data_json, f)
-
-    #Drawing modpacks from web server.
+    #Drawing modpacks from web server. ---------------------------------
 
     with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
         nova_hub_json = json.loads(url.read().decode())
@@ -322,8 +313,8 @@ def installations_menu(button_used, previous_frame):
         settings_image = settings_image.resize((actual_width, actual_height))
         tkimage = ImageTk.PhotoImage(settings_image)
         settings_button = Button(modpack_frame, image=tkimage, bg="#282727", activebackground="#282727", borderwidth=0, cursor="hand2")
-        settings_button.config(command=lambda installations_frame=installations_frame, display_name=display_name, folder_name=folder_name : 
-        modpack_settings_menu(installations_frame, display_name, folder_name))
+        settings_button.config(command=lambda installations_frame=installations_frame, display_name=display_name, folder_name=folder_name, code_name=code_name : 
+        modpack_settings_menu(installations_frame, display_name, folder_name, code_name))
         settings_button.photo = tkimage
         settings_button.place(x=213, y=230)
 
@@ -438,10 +429,18 @@ def home_menu(button_used, previous_frame):
     emoji.emojize("Zzzz.. Currently waiting for Zeeraa to finish the news letter system."))
 
     #webview_v2(home_frame, "https://novauniverse.net/api/private/hub/news_letter/")
+    message = """
+Nova Hub is an app that players can use to rapidly install Mod Packs for game modes on nova universe like Terra Smp. It allows for players to not worry about installing forge, optifine and all the mods required for play.
+
+Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future.
+
+    """
+
+    popup_notification("big_message", "Welcome to Nova Hub!", message)
 
 amount_of_news = 0
 
-def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
+def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name):
     if not previous_frame == None:
         previous_frame.pack_forget()
 
@@ -455,6 +454,33 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
 
     modpack_settings_frame = Frame(main_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
     modpack_settings_frame.pack(fill=BOTH, expand=2, padx=20, pady=15)
+
+    def uninstall_modpack(modpack_frame, run):
+        def finish_effect():
+            time.sleep(2)
+            
+            #Destroy Live Run Status
+            progress.pack_forget()
+            live_status_text.pack_forget()
+
+        uninstall_button.pack_forget()
+
+        #Threads needed for uninstall.
+        t3=threading.Thread(target=run.run, args=(["uninstall"])) #Run Installer thread.
+        t3.setDaemon(True)
+        t3.start()
+
+        t2=threading.Thread(target=live_run_status, args=([run, modpack_settings_frame])) #Live Run Stats
+        t2.setDaemon(True)
+        t2.start()
+
+        t5=threading.Thread(target=finish, args=([t3, False])) #Finish Uninstall thread
+        t5.setDaemon(True)
+        t5.start()
+
+        t9=threading.Thread(target=finish_effect)
+        t9.setDaemon(True)
+        t9.start()
 
     #Mod Pack Name
     pack_name_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
@@ -524,6 +550,37 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
     ma_checkbox.place(x=680, y=0)
 
     is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
+    is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
+
+    if is_modpack_installed == True:
+
+        #Import run.py from script.
+
+        try:
+            print_and_log(None, f"Importing {pack_name} Script...\n")
+            run = importlib.import_module(f"installers.{code_name}.run")
+
+        except Exception as e:
+            print_and_log("error", e)
+            pass
+
+
+        if is_script_downloaded == True:
+            #Uninstall Modpack Button
+            uninstall_image = Image.open(settings.path_to_images + "nova_hub_remove_button.png")
+
+            width, height = uninstall_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
+
+            uninstall_image = uninstall_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(uninstall_image)
+            uninstall_button = Button(modpack_settings_frame, image=tkimage, font=("Arial Bold", 16), fg="white", bg="#1F1E1E", activebackground="#C06565", borderwidth=0, 
+            cursor="hand2")
+            uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run : uninstall_modpack(modpack_settings_frame, run))
+            uninstall_button.photo = tkimage
+            uninstall_button.pack(side="bottom")
 
     #Stuff to disable if mod pack is not installed.
     if not is_modpack_installed == True:
@@ -531,8 +588,6 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name):
         ma_slider.config(state="disabled") #Disable Slider if mod pack is not installed.
         ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=True)
         ma_ram_text_label.config(text="MOD PACK NOT INSTALLED", font=ma_ram_text_font, fg="grey")
-
-
 
 def webview(frame=None, url=None): #Wait untill module dev fixes issue.
     html_frame = HtmlFrame(frame)
@@ -647,10 +702,43 @@ def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_d
     embeded_des_label = Label(embeded_description_frame, text=embeded_des, font=embeded_des_font, fg="#BDBDBD", bg="#282727", wraplength=740)
     embeded_des_label.pack()
 
-def finish(thread_to_wait_for):
+def popup_notification(noti_type, title=None, message=None):
+    noti_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    noti_font_title = font.Font(family='Arial Rounded MT Bold', size=20, weight='bold', underline=False)
+    message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+
+    if noti_type.lower() == "yes_no_prompt":
+        noti_window = Toplevel(bg="#171717")
+
+    if noti_type.lower() == "big_message":
+        noti_window = Toplevel(bg="#171717", height=200, width=600)
+        noti_window.resizable(False, False)
+        noti_window.title(title)
+
+        #Big Title
+        title_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=700)
+        title_label.pack(pady=0)
+
+        #Message
+        message_frame = Frame(noti_window, width=730, height=300, bg="#171717")
+        message_frame.pack(padx=5)
+
+        message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        message_label = Label(message_frame, text=message, font=message_label_font, fg="#BDBDBD", bg="#171717", wraplength=700)
+        message_label.pack()
+
+        #Ok Button
+        ok_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+        ok_button = Button(noti_window, text="Ok!", font=ok_button_font, padx=5, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2", command=lambda: noti_window.withdraw())
+        ok_button.pack()
+        ok_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
+        ok_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
+
+def finish(thread_to_wait_for, open_mc_launcher=True):
 
     thread_to_wait_for.join()
-    open_mc_launcher = True
 
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)

@@ -10,8 +10,21 @@ import requests
 import stat
 import subprocess
 
+
 from . import settings
 from . import game_directory_finder
+
+#Try using Nova Hub's function file first. (Only works if runing script from Nova Hub.)
+try:
+    from . import nova_func
+    from nova_func import print_and_log
+    print_and_log("info", "Using functions from Nova Hub.")
+
+except ImportError: #If error import function file from root.
+    import nova_func
+    from nova_func import print_and_log
+    print_and_log("warn", "The script failed to use functions from Nova Hub so it's own temporary functions.\n(Runing the script alone without Nova Hub is not recommended as they may be bugs and we won't be able to fix those bugs.)")
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__)) #Current Working Dir
 
@@ -511,6 +524,17 @@ def run(option=None): #This is the main run script that actualy runs the script 
             live_installer_status = "[No Forge Versions to Restore]"
             print_and_log("info", "No Forge Versions to Restore")
             return None
+
+    if option.upper() == 'UNINSTALL':
+        print_and_log("info_2", "[DONE]")
+
+        if ran_as_script == True:
+            exit_run()
+
+        if ran_as_script == False:
+            sys.exit()
+
+        return True
 
 if __name__ == '__main__':
     #This executes only if the file is run as a script.
