@@ -208,7 +208,7 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
                 print_and_log("INFO", "Deleting file '{}'...".format(f))
                 if not text_label == None:
                     text_label.config(text="Deleting file '{}'...".format(f))
-                os.remove(from_dir + f)
+                delete_file(from_dir + f)
 
                 print_and_log(None, "[DONE]")
                 if not text_label == None:
@@ -327,6 +327,23 @@ def get_size(bytes, suffix="B"):
         if bytes < factor:
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
+
+def get_nova_hub_json():
+    import settings
+    print_and_log(None, "Connecting to API to grab nova_hub.json...")
+    try:
+        with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
+            nova_hub_json = json.loads(url.read().decode())
+
+        print_and_log("info_2", "Grabbed json successfully!")
+        print_and_log()
+
+        return nova_hub_json
+
+    except Exception as e:
+        print_and_log(None, e)
+
+    del settings
 
 class check_modpack:
 
