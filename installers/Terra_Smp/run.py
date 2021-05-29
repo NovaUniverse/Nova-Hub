@@ -15,18 +15,33 @@ script_name = "TERRA SMP : SCRIPT"
 from . import settings
 from . import game_directory_finder
 
-#Try using Nova Hub's function file first. (Only works if runing script from Nova Hub.)
+#Try using Nova Hub's function file first. (Only works if running script from Nova Hub.)
 try:
-    from . import nova_func
-    from nova_func import print_and_log, create_mc_launcher_profile
+    sys.path.append(os.path.abspath(os.path.join('..','..', 'nova_func')))
+
+    from nova_func import *
     print_and_log("info", f"[{script_name}] Using functions from Nova Hub.")
+
+except ImportError: #If error import function file from root if avalible.
+    import nova_func
+    from nova_func import *
+    print_and_log("warn", "The script failed to use functions from Nova Hub so it's using it's own temporary functions now.\n(Runing the script alone without Nova Hub is not recommended as they may be bugs and we won't be able to remotely fix those bugs.)")
+
+#Try using Nova Hub's nova_dir file first. (Only works if running script from Nova Hub.)
+try:
+    sys.path.append(os.path.abspath(os.path.join('..','..', 'nova_dir')))
+    from nova_dir import *
+    print_and_log("info", f"[{script_name}] Using nova_dir from Nova Hub.")
     print_and_log()
 
-except ImportError: #If error import function file from root.
-    import nova_func
-    from nova_func import print_and_log, create_mc_launcher_profile
-    print_and_log("warn", "The script failed to use functions from Nova Hub so it's own temporary functions.\n(Runing the script alone without Nova Hub is not recommended as they may be bugs and we won't be able to fix those bugs.)")
+except ImportError:
+    import nova_dir
+    from nova_dir import *
+    print_and_log("warn", "The script failed to import nova_dir from Nova Hub so it's using it's own nova_dir module.\n(Runing the script alone without Nova Hub is not recommended as they may be bugs and we won't be able to remotely fix those bugs.)")
+    
     print_and_log()
+
+ran_as_script = False
 
 current_dir = os.path.dirname(os.path.realpath(__file__)) #Current Working Dir
 
@@ -40,104 +55,8 @@ forge_ver_name = settings.forge_ver_name
 path_to_old_forge_folder = settings.path_to_old_forge_folder
 path_to_mc_launcher_exe = settings.path_to_mc_launcher_exe
 
-ran_as_script = False
-
 live_installer_status = "Starting script..." #Status for installer gui.
 live_installer_progress_bar = 0
-
-def get_time_and_date(option):
-
-    if option.lower() == 'date':
-        today = date.today()
-        # dd/mm/YY
-        current_date = today.strftime("%d-%m-%Y")
-        return current_date
-
-    if option.lower() == 'time':
-        t = time.localtime()
-        # hh/mm/ss
-        current_time = time.strftime("%H.%M.%S", t)
-        return current_time
-
-    if option.lower() == 'both':
-        #Date
-        today = date.today()
-        current_date = today.strftime("%d-%m-%Y")
-
-        #Time
-        t = time.localtime()
-        current_time = time.strftime("%H.%M.%S", t)
-
-        both = "({}) [{}]".format(current_date, current_time)
-        return both
-
-log_date_and_time = get_time_and_date("both") #Time run file was ran.
-
-def print_and_log(importance_level=None, text=None):
-    
-    if text == None: #Just makes a new line.
-        print ("")
-        log("")
-        return
-
-    if not text == None:
-        if importance_level == None:
-            time = get_time_and_date("time")
-            context = ("({}) {}".format(time, text))
-
-            print (f"\u001b[37m{context}\u001b[0m")
-            log(context)
-            return
-
-        if importance_level.upper() == 'INFO':
-            time = get_time_and_date("time")
-            context = ("({}) [INFO] {}".format(time, text))
-
-            print (f"\u001b[36m{context}\u001b[0m") #Clay
-            log(context)
-            return
-
-        if importance_level.upper() == 'INFO_2':
-            time = get_time_and_date("time")
-            context = ("({}) [INFO] {}".format(time, text))
-
-            print (f"\u001b[32m{context}\u001b[0m") #Green
-            log(context)
-            return
-
-        if importance_level.upper() == 'WARN':
-            time = get_time_and_date("time")
-            context = ("({}) [WARN] {}".format(time, text))
-
-            print (f"\u001b[33m{context}\u001b[0m") #Yellow
-            log(context)
-            return
-
-        if importance_level.upper() == 'ERROR':
-            time = get_time_and_date("time")
-            context = ("({}) [ERROR] {}".format(time, text))
-
-            print (f"\u001b[31m{context}\u001b[0m") #Red
-            log(context)
-            return
-
-        if importance_level.upper() == 'APP_NAME':
-            context = (text)
-
-            print (f"\u001b[35m{context}\u001b[0m")
-            log(context)
-            return
-
-def log(text):
-    #Create Logs Folder.
-    try:
-        os.mkdir(path_to_logs)
-
-    except FileExistsError as e:
-        live_installer_status = "[Log Folder Already Exists]"
-
-    f = open(f"{settings.path_to_logs}{log_date_and_time}.txt", "a")
-    f.write(text + "\n")
 
 def create_temp_folder(path=""):
     global live_installer_status
@@ -198,140 +117,6 @@ def clear_mods_folder():
     except OSError as e:
         print_and_log("ERROR", f"Error occured while clearing temp folder. \n {e}")
         print_and_log()
-        return False
-
-def delete_file(file):
-    global live_installer_status
-
-    live_installer_status = f"Deleting {file}..."
-    print_and_log(None, f"Deleting {file}...")
-
-    try:
-        try:
-            os.remove(file) #Deleting as fiile
-        except WindowsError as e:
-            shutil.rmtree(file) #If not file delete as directory with it's contexts.
-        print_and_log(None, "[Done]")
-        live_installer_status = "[Done]"
-
-        print_and_log()
-        return True
-
-    except OSError as e:
-        print_and_log("ERROR", f"Error occured while removing {file} \n {e}")
-        live_installer_status = e
-        return False
-
-def create_appdata_folder():
-    global live_installer_status
-    live_installer_status = "Creating AppData Folder..."
-    print_and_log(None, "Creating AppData Folder in '" + path_to_appdata_folder + "'")
-    try:
-        os.mkdir(path_to_appdata_folder)
-        os.chmod(path_to_appdata_folder, stat.S_IWRITE)
-        return True
-
-    except FileExistsError as e:
-        live_installer_status = "[AppData Folder Already Exists]"
-        print_and_log("INFO", "AppData Folder Already Exists.")
-        print_and_log()
-        return None
-
-def create_folder(path):
-    global live_installer_status
-    live_installer_status = "Creating a Folder..."
-    print_and_log(None, "Creating Folder '" + path + "'")
-    try:
-        os.mkdir(path)
-        os.chmod(path, stat.S_IWRITE)
-        print_and_log(None, "[DONE]")
-        return path
-
-    except FileExistsError as e:
-        live_installer_status = "[Folder Already Exists]"
-        print_and_log("INFO", "This Folder Already Exists.")
-        print_and_log()
-        return path
-
-def download_file(url, download_path):
-    global live_installer_status
-    global live_installer_progress_bar
-    try: 
-        headers = {'User-Agent': str(settings.app_name)}
-
-        r = requests.get(url, allow_redirects=True, headers=headers)
-        with open(download_path, 'wb') as f:
-            for chunk in r.iter_content(1024):
-                f.write(chunk)
-
-        return True
-
-    except OSError as e:
-        print_and_log("ERROR", e)
-        live_installer_status = e
-        return False
-
-def extract_zip(path_to_zip):
-    global live_installer_status
-    try:
-        with ZipFile(path_to_zip, 'r') as zip:
-            print_and_log()
-            zip.printdir()
-            print_and_log()
-            zip.extractall(temp_folder_path)
-            print_and_log(None, "[Done]")
-            print_and_log()
-            zip.close()
-        return True
-
-    except OSError as e:
-        print_and_log("ERROR", e)
-        print_and_log()
-        live_installer_status = e
-        return False
-
-def move_files(from_dir, target_dir): #Move multiple files from a directory.
-    global live_installer_status
-    try:
-        files = os.listdir(from_dir)
- 
-        for f in files:
-            print_and_log(None, f"Moving {f} to {target_dir}")
-            shutil.move(from_dir + f, target_dir)
-            print_and_log(None, "[Done]")
-
-        print_and_log()
-        return True
-
-    except FileExistsError as e:
-        print_and_log("INFO", "This File Already Exists.")
-        print_and_log()
-        return False
-
-    except OSError as e:
-        print_and_log("ERROR", e)
-        print_and_log()
-        live_installer_status = e
-        return False
-
-def move_file(f, target_dir): #Move a single file
-    global live_installer_status
-    try:
-        print_and_log(None, f"Moving {f} to {target_dir}")
-        shutil.move(f, target_dir)
-        print_and_log(None, "[Done]")
-        print_and_log()
-        return True
-
-    except FileExistsError as e:
-        print_and_log("INFO", "This File Already Exists.")
-        print_and_log()
-        return False
-
-    except OSError as e:
-        print_and_log("ERROR", e)
-        print_and_log()
-        live_installer_status = e
         return False
 
 def exit_run(): 
@@ -434,11 +219,11 @@ def run(option=None): #This is the main run script that actualy runs the script 
             print_and_log(None, "Moving Forge...")
             forge_dir = temp_folder_path + "\\" + settings.forge_ver_name
             move_file(forge_dir, settings.path_to_mc_versions_folder)
-            live_installer_progress_bar = 60
+            live_installer_progress_bar = 56
 
-        live_installer_progress_bar = 60
+        live_installer_progress_bar = 58
         clear_temp_folder() #Deletes all files in temp folder.
-        live_installer_progress_bar = 64
+        live_installer_progress_bar = 60
 
         #Download Mods Zip.
         live_installer_status = "Downloading Mods..."
@@ -446,39 +231,53 @@ def run(option=None): #This is the main run script that actualy runs the script 
 
         mod_zip_dir = temp_folder_path + "mods.zip"
         download_file(settings.modpack_zip_url, mod_zip_dir)
-        live_installer_progress_bar = 74
+        live_installer_progress_bar = 62
 
         #Extract Mods Zip.
         live_installer_status = "Extracting Mods..."
         print_and_log(None, "Extracting Mods...")
         extract_zip(mod_zip_dir)
-        live_installer_progress_bar = 84
+        live_installer_progress_bar = 64
 
         #Delete Mods Zip.
         delete_file(mod_zip_dir)
-        live_installer_progress_bar = 86
+        live_installer_progress_bar = 66
 
         #Move the mods to TerraSMP appdata folder.
         mods_folder = create_folder(path_to_terra_smp_dir + "\\mods")
-        live_installer_progress_bar = 88
+        live_installer_progress_bar = 68
         clear_mods_folder() #Makes sure there are no mods in the folder.
-        live_installer_progress_bar = 90
+        live_installer_progress_bar = 70
         move_files(temp_folder_path, path_to_mods_folder)
+        live_installer_progress_bar = 72
+
+        #Download Shaders Zip.
+        live_installer_status = "Downloading Shaders..."
+        print_and_log(None, "Downloading Shaders...")
+
+        destination_path = download_modpack_file("terra_smp", "shaders.zip")
+        live_installer_progress_bar = 74
+
+        #Extract Shaders Zip.
+        live_installer_status = "Extracting Shaders..."
+        print_and_log(None, "Extracting Shaders...")
+        extract_zip(destination_path + "\\shaders.zip")
+        live_installer_progress_bar = 84
+
+        #Delete Shaders Zip.
+        delete_file(destination_path + "\\shaders.zip")
+        live_installer_progress_bar = 86
+
+        #Move shaders to TerraSMP appdata folder.
+        path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+        live_installer_progress_bar = 88
+        create_folder(path_to_nova_universe_dir + "\\TerraSMP\\shaderpacks")
+        live_installer_progress_bar = 90
+        move_files(destination_path + "\\shaders", path_to_nova_universe_dir + "\\TerraSMP" + "\\shaderpacks", replace=True)
         live_installer_progress_bar = 96
 
-        #Create MC Launcher Profile
-        '''
-        "2fd04fe264ce3770d509522f1698cdb1" : {
-          "created" : "2021-05-12T23:12:28.655Z",
-          "gameDir" : "C:\\Users\\pc\\AppData\\Roaming\\.NovaUniverse\\TerraSMP",
-          "icon" : "Dirt_Podzol",
-          "javaArgs" : "-Xmx3G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M",
-          "lastUsed" : "1970-01-01T00:00:00.000Z",
-          "lastVersionId" : "1.12.2-forge-14.23.5.2854",
-          "name" : "Terra Smp - v2.00",
-          "type" : "custom"
-
-        '''
+        #Clear temp folder
+        clear_temp_folder()
 
         #Open MC Launcher
         live_installer_status = "Opening MC Launcher..."
@@ -517,7 +316,93 @@ def run(option=None): #This is the main run script that actualy runs the script 
             print_and_log("info", "No Forge Versions to Restore")
             return None
 
+    if option.upper() == 'UPDATE':
+        if not ran_as_script == True:
+            live_installer_progress_bar = 0
+            live_installer_status = "Clearing temp folder..."
+            clear_temp_folder()
+            live_installer_progress_bar = 5
+
+            live_installer_status = "Downloading forge.zip..."
+            download_modpack_file("terra_smp", "forge.zip")
+            live_installer_progress_bar = 10
+
+            live_installer_status = "Downloading mods.zip..."
+            download_modpack_file("terra_smp", "mods.zip")
+            live_installer_progress_bar = 15
+
+            live_installer_status = "Downloading shaders.zip..."
+            destination_path = download_modpack_file("terra_smp", "shaders.zip")
+            live_installer_progress_bar = 20
+
+            for file in check_dir(destination_path): #Extract all zips in temp folder.
+                extract_zip(destination_path + f"\\{file}")
+
+            live_installer_progress_bar = 40
+
+            files_in_mc_versions_dir = os.listdir(settings.path_to_mc_versions_folder)
+            live_installer_progress_bar = 42
+
+            nova_hub_json = get_nova_hub_json()
+            path_to_dot_minecraft = Nova_Dir.get_mc_game_directory()
+            path_to_mc_versions_folder = path_to_dot_minecraft + "\\versions"
+
+            #Move Forge to mc versions folder.
+            live_installer_status = "Moving Forge..."
+            print_and_log(None, "Moving Forge...")
+            mc_version_name = nova_hub_json["packs"]["terra_smp"]["mc_version"]
+            forge_dir = destination_path + "\\forge" + f"\\{mc_version_name}"
+
+            extract_zip(forge_dir + ".zip")
+            move_confirmation = move_file(forge_dir, path_to_mc_versions_folder)
+
+            if move_confirmation == False:
+                #Delete previous forge and move new forge.
+                delete_file(path_to_mc_versions_folder + f"\\{mc_version_name}")
+                move_file(forge_dir, path_to_mc_versions_folder)
+
+            live_installer_progress_bar = 60
+
+            path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+
+            #Move new mods to mods folder.
+            mods_dir = destination_path + "\\mods"
+            move_files(mods_dir, path_to_nova_universe_dir + "\\TerraSMP\\mods", replace=True)
+            live_installer_progress_bar = 80
+
+            #Move new shaders to shaders folder.
+            shaders_dir = destination_path + "\\shaders"
+            move_files(mods_dir, path_to_nova_universe_dir + "\\TerraSMP\\shaderpacks", replace=True)
+            live_installer_progress_bar = 100
+
+            clear_temp_folder()
+
+            live_installer_status = "[DONE]"
+            print_and_log("info_2", "[DONE]")
+            print_and_log()
+
+            if ran_as_script == True:
+                subprocess.call(path_to_mc_launcher_exe)
+                exit_run()
+
+            if ran_as_script == False:
+                sys.exit()
+
+            return True
+
+        else:
+            print_and_log("error", "Updating isn't supported yet for stand alone script exacution. The script will need to be ran by Nova Hub.")
+            return False
+
     if option.upper() == 'UNINSTALL':
+        live_installer_progress_bar = 0
+        print_and_log(None, "Deleting TerraSMP folder...")
+        live_installer_status = "Deleting TerraSMP folder..."
+        path = Nova_Dir.get_nova_universe_directory()
+        live_installer_progress_bar = 40
+        delete_file(path + "\\TerraSMP")
+        live_installer_progress_bar = 100
+        live_installer_status = "[DONE]"
         print_and_log("info_2", "[DONE]")
 
         if ran_as_script == True:

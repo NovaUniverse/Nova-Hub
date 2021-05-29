@@ -24,7 +24,7 @@ from nova_func import *
 from nova_dir import *
 
 import ctypes
-#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
 
 app_name = settings.app_name
 
@@ -182,6 +182,28 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
+    def update_button_hover_enter(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
+        hex_colour = Color("#282727")
+        colours = list(hex_colour.range_to(Color("#ff8142"), 12)) #Dark Orange
+
+        hex_colour = Color("#C52612") #Text
+        colours_text = list(hex_colour.range_to(Color("black"), 12))
+        
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
+    def update_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
+        hex_colour = Color("#ff8142")
+        colours = list(hex_colour.range_to(Color("#282727"), 20))
+
+        hex_colour = Color("black") #Text
+        colours_text = list(hex_colour.range_to(Color("#C52612"), 20))
+        
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
     def install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, code_name, run, nova_hub_json):
         def finish_effect():
             time.sleep(2)
@@ -249,13 +271,101 @@ def installations_menu(button_used, previous_frame):
         mc_version = nova_hub_json["packs"][code_name]["mc_version"]
         default_java_args = nova_hub_json["packs"][code_name]["java_args"]
 
-        create_mc_launcher_profile(code_name, profile_name + f" - V{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+        mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
 
         t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
         t5.setDaemon(True)
         t5.start()
 
         #Add installed mod pack to modpacks.json
+        path = Nova_Dir.get_nova_universe_directory()
+        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+            modpacks_json = json.load(f)
+
+        modpacks_json[code_name] = {}
+        modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+
+        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+            json.dump(modpacks_json, f)
+
+        t9=threading.Thread(target=finish_effect)
+        t9.setDaemon(True)
+        t9.start()
+
+    def update_modpack(modpack_frame, update_button, pack_image_frame, version_label, modpack_title, settings_button, code_name, run, nova_hub_json):
+        def finish_effect():
+            time.sleep(2)
+            
+            progress.pack_forget()
+            live_status_text.pack_forget()
+
+            hex_colour = Color("#C06565")
+            colours = list(hex_colour.range_to(Color("#00B6C0"), 40))
+
+            hex_colour = Color("#C52612") #Text
+            colours_text = list(hex_colour.range_to(Color("black"), 12))
+            
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+            t8.setDaemon(True)
+            t8.start()
+
+            launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+
+            width, height = launch_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
+
+            launch_image = launch_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(launch_image)
+            launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+            cursor="hand2")
+            launch_button.config()
+            launch_button.photo = tkimage
+
+            t8.join()
+            launch_button.place(x=64, y=210)
+
+        #Update Effect
+        hex_colour = Color("#C06565")
+        colours = list(hex_colour.range_to(Color("#00C03E"), 20))
+
+        hex_colour = Color("#C52612") #Text
+        colours_text = list(hex_colour.range_to(Color("black"), 12))
+
+        #Threads needed for install.
+        t3=threading.Thread(target=run.run, args=(["UPDATE"])) #Run Installer thread.
+        t3.setDaemon(True)
+        t3.start()
+
+        t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
+        t2.setDaemon(True)
+        t2.start()
+
+        time.sleep(0.1)
+
+        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, update_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+        t8.setDaemon(True)
+        t8.start()
+
+        #Update mc launcher profile for mod pack.
+        from datetime import datetime
+        todays_date = datetime.now().isoformat() #Getting current date.
+
+        profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
+        ver = nova_hub_json["packs"][code_name]["ver"]
+        folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
+        block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
+        mc_version = nova_hub_json["packs"][code_name]["mc_version"]
+        default_java_args = nova_hub_json["packs"][code_name]["java_args"]
+
+        mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+
+        t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
+        t5.setDaemon(True)
+        t5.start()
+
+        #Update mod pack version in modpacks.json
         path = Nova_Dir.get_nova_universe_directory()
         with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
             modpacks_json = json.load(f)
@@ -331,7 +441,7 @@ def installations_menu(button_used, previous_frame):
         settings_button.config(command=lambda installations_frame=installations_frame, display_name=display_name, folder_name=folder_name, code_name=code_name : 
         modpack_settings_menu(installations_frame, display_name, folder_name, code_name))
         settings_button.photo = tkimage
-        settings_button.place(x=213, y=230)
+        settings_button.place(x=213, y=230) #Notice for later: Maybe add a rotaion effect to the settings icon.
 
         #Grey Install Button
         grey_install_image = Image.open(settings.path_to_images + "greyed_install_button.png")
@@ -386,9 +496,8 @@ def installations_menu(button_used, previous_frame):
             installs_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
             modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
-        #Notice for later: Maybe add a rotaion effect to the settings icon.
-
         is_modpack_installed = check_modpack.is_installed(None, folder_name)
+        does_modpack_need_update = check_modpack.need_update(None, code_name)
 
         if is_modpack_installed == True:
             hex_colour = Color("#171717")
@@ -412,14 +521,37 @@ def installations_menu(button_used, previous_frame):
             installs_button.photo = tkimage
             installs_button.place(x=64, y=210)
 
-            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
-            t8.setDaemon(True)
-            t8.start()
+            if not does_modpack_need_update == True:
+                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+                t8.setDaemon(True)
+                t8.start()
+
+        #Update checking
+        if does_modpack_need_update == True:
+
+            #Set update button.
+            update_image = Image.open(settings.path_to_images + "nova_hub_update_button.png")
+
+            width, height = update_image.size
+            
+            actual_width = round(int(width)/14)
+            actual_height = round(int(height)/14)
+
+            update_image = update_image.resize((actual_width, actual_height))
+            tkimage = ImageTk.PhotoImage(update_image)
+            update_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
+            cursor="hand2")
+            update_button.config(command=lambda modpack_frame=modpack_frame, update_button=update_button, pack_image_frame=pack_image_frame, version_label=version_label, modpack_title=modpack_title, 
+            settings_button=settings_button, mod_pack=mod_pack, run=run, nova_hub_json=nova_hub_json : update_modpack(modpack_frame, update_button, pack_image_frame, version_label, modpack_title, 
+            settings_button, mod_pack, run, nova_hub_json))
+            update_button.photo = tkimage
+            update_button.place(x=64, y=210)
+            update_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+            modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
+            update_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+            modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
         amount_of_installers =+ 1
-
-        t3=threading.Thread(target=modpack_updater, args=(["NORMAL"]))
-        t3.start()
 
 def home_menu(button_used, previous_frame):
     global home_frame
@@ -471,7 +603,7 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     modpack_settings_frame = Frame(main_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
     modpack_settings_frame.pack(fill=BOTH, expand=2, padx=20, pady=15)
 
-    def uninstall_modpack(modpack_frame, run):
+    def uninstall_modpack(modpack_frame, run, code_name):
         def finish_effect():
             time.sleep(2)
             
@@ -489,6 +621,16 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
         t2=threading.Thread(target=live_run_status, args=([run, modpack_settings_frame])) #Live Run Stats
         t2.setDaemon(True)
         t2.start()
+
+        #Remove mod pack from modpacks.json
+        path = Nova_Dir.get_nova_universe_directory()
+        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+            modpacks_json = json.load(f)
+
+        modpacks_json.pop(str(code_name), None)
+
+        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+            json.dump(modpacks_json, f)
 
         t5=threading.Thread(target=finish, args=([t3, False])) #Finish Uninstall thread
         t5.setDaemon(True)
@@ -527,7 +669,7 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
         ma_ram_text_label.config(text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)")
 
         #2GB, 3GB, 4GB, 6GB, 8GB, 10GB, 12GB, 16GB
-        values_to_stop_at = [2147483648, 3221225472]
+        values_to_stop_at = [2147483648, 3221225472, 4294967296, 6442450944, 8589934592, 10737418240, 12884901888, 17179869184]
 
         stop_at_common_values = ma_checkbox_var.get()
 
@@ -535,9 +677,6 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
             for ram_value in values_to_stop_at:
 
                 if math.isclose(ram_value, int(e), abs_tol=40000000) == True:
-                    print("yo suck ma coc#")
-                    print(str(ram_value) + "\n")
-
                     t11=threading.Thread(target=set_slider, args=([ram_value]))
                     t11.start()
 
@@ -580,23 +719,30 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
             print_and_log("error", e)
             pass
 
-
         if is_script_downloaded == True:
             #Uninstall Modpack Button
-            uninstall_image = Image.open(settings.path_to_images + "nova_hub_remove_button.png")
+            #uninstall_image = Image.open(settings.path_to_images + "nova_hub_remove_button.png")
 
-            width, height = uninstall_image.size
+            #width, height = uninstall_image.size
             
-            actual_width = round(int(width)/14)
-            actual_height = round(int(height)/14)
+            #actual_width = round(int(width)/10)
+            #actual_height = round(int(height)/10)
 
-            uninstall_image = uninstall_image.resize((actual_width, actual_height))
-            tkimage = ImageTk.PhotoImage(uninstall_image)
-            uninstall_button = Button(modpack_settings_frame, image=tkimage, font=("Arial Bold", 16), fg="white", bg="#1F1E1E", activebackground="#C06565", borderwidth=0, 
+            #uninstall_image = uninstall_image.resize((actual_width, actual_height))
+            #tkimage = ImageTk.PhotoImage(uninstall_image)
+
+            uninstall_button_font = font.Font(family='Arial Rounded MT Bold', size=16, weight='bold', underline=False)
+            uninstall_button = Button(modpack_settings_frame, text="Uninstall Modpack", font=uninstall_button_font, padx=15, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
             cursor="hand2")
-            uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run : uninstall_modpack(modpack_settings_frame, run))
-            uninstall_button.photo = tkimage
-            uninstall_button.pack(side="bottom")
+            uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run, code_name=code_name : uninstall_modpack(modpack_settings_frame, run, code_name))
+            uninstall_button.pack(side="bottom", pady=10)
+            uninstall_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
+            uninstall_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
+
+            #uninstall_button = Button(modpack_settings_frame, image=tkimage, bg="#1F1E1E", activebackground="#C06565", borderwidth=0, cursor="hand2")
+            #uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run, code_name=code_name : uninstall_modpack(modpack_settings_frame, run, code_name))
+            #uninstall_button.photo = tkimage
+            #uninstall_button.pack(side="bottom")
 
     #Stuff to disable if mod pack is not installed.
     if not is_modpack_installed == True:
@@ -818,7 +964,7 @@ def finish(thread_to_wait_for, open_mc_launcher=True):
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
-def modpack_updater(option=None):
+def modpack_updater(option=None, modpack_frame=None):
     def check_modpacks_for_update():
 
         #Check for updates.
@@ -841,6 +987,26 @@ def modpack_updater(option=None):
             #Decide if it needs an update or not.
             if int(ver) > int(modpacks_json[mod_pack]['ver']):
                 print_and_log("info_2", f"Found an update for {display_name}")
+
+                #Set update button.
+                update_image = Image.open(settings.path_to_images + "nova_hub_update_button.png")
+
+                width, height = update_image.size
+                
+                actual_width = round(int(width)/14)
+                actual_height = round(int(height)/14)
+
+                update_image = update_image.resize((actual_width, actual_height))
+                tkimage = ImageTk.PhotoImage(update_image)
+                update_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
+                cursor="hand2")
+                update_button.config(command=None) #Insert update_modpack function here.
+                update_button.photo = tkimage
+                update_button.place(x=64, y=210)
+                update_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+                modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
+                update_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
+                modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
                 #Update the pack.
                 download_update()

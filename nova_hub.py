@@ -141,7 +141,10 @@ def check_nova_hub_appdata_folder():
         modpacks_json = {}
         with open(path + "\\#.nova_hub\\mod_packs.json", 'w') as f:
             json.dump(modpacks_json, f)
-        
+
+def check_assets_folder():
+    pass
+    
 def run_update_service():
     pass
 

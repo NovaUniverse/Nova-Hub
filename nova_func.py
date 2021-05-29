@@ -193,11 +193,12 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
 
     for f in files:
         try:
+            print(f)
             print_and_log(None, f"Moving {f} to {target_dir}")
             if not text_label == None:
                 text_label.config(text=f"Moving {f} to {target_dir}")
 
-            shutil.move(from_dir + f, target_dir)
+            shutil.move(from_dir + f"\\{f}", target_dir)
             print_and_log(None, "[Done]")
 
             if not text_label == None:
@@ -240,7 +241,7 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
     print_and_log()
     return True
 
-def move_file(f, target_dir): #Move a single file
+def move_file(f, target_dir, replace=False): #Move a single file
     try:
         print_and_log(None, f"Moving {f} to {target_dir}")
         shutil.move(f, target_dir)
@@ -253,11 +254,6 @@ def move_file(f, target_dir): #Move a single file
         print_and_log("INFO", "This File Already Exists.")
         print_and_log()
 
-        if os.path.isdir(target_dir): #Checks if it's a directory and removes all the contexts within it.
-            if os.path.exists(target_dir):
-                print_and_log("INFO", "Deleting directory '{}'...".format(target_dir))
-                shutil.rmtree(target_dir)
-
         return False
 
     except OSError as e:
@@ -269,10 +265,10 @@ def move_file(f, target_dir): #Move a single file
 def download_file(url, download_path, text_label=None):
     import settings
     try:
-        print_and_log(None, "Downloading {}...".format(download_path))
+        print_and_log(None, "Downloading file to {}...".format(download_path))
         headers = {'User-Agent': str(settings.app_name)}
         if not text_label == None:
-            text_label.config(text="Downloading {}...".format(download_path))
+            text_label.config(text="Downloading file to {}...".format(download_path))
 
         r = requests.get(url, allow_redirects=True, headers=headers)
         with open(download_path, 'wb') as f:
@@ -296,43 +292,6 @@ def download_file(url, download_path, text_label=None):
 def check_dir(path_to_dir):
     files = os.listdir(path_to_dir)
     return files
-
-def create_mc_launcher_profile(code_name, profile_name, folder_name, todays_date, block_icon=None, base_64_icon_string=None, mc_version_name=None, java_args=None):
-    import nova_dir
-    from nova_dir import Nova_Dir
-
-    try:
-        mc_path = Nova_Dir.get_mc_game_directory()
-        with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
-            launcher_profiles_json = json.load(f)
-
-        launcher_profiles_json["profiles"][code_name] = {}
-
-        if not block_icon == None:
-            launcher_profiles_json["profiles"][code_name]["icon"] = str(block_icon)
-
-        if not base_64_icon_string == None:
-            launcher_profiles_json["profiles"][code_name]["icon"] = f"data:image/png;base64,{base_64_icon_string}"
-
-        if not mc_version_name == None:
-            launcher_profiles_json["profiles"][code_name]["lastVersionId"] = mc_version_name
-
-        launcher_profiles_json["profiles"][code_name]["name"] = profile_name
-
-        path = Nova_Dir.get_nova_universe_directory()
-        launcher_profiles_json["profiles"][code_name]["gameDir"] = (path + f"\\{folder_name}")
-
-        launcher_profiles_json["profiles"][code_name]["javaArgs"] = java_args
-
-        launcher_profiles_json["profiles"][code_name]["lastUsed"] = todays_date
-
-        launcher_profiles_json["profiles"][code_name]["type"] = ""
-
-        with open(mc_path + "\\launcher_profiles.json", "w") as f: #Write
-            json.dump(launcher_profiles_json, f)
-
-    except Exception as e:
-        print_and_log("error", e)
 
 def create_nova_hub_appdata_folder():
     import settings
@@ -361,6 +320,12 @@ def get_size(bytes, suffix="B"):
         if bytes < factor:
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
+
+def download_modpack_file(modpack_code_name, file_name):
+    import settings
+    download_file(settings.api + settings.nova_hub_modpack_location + f"/{modpack_code_name}/{file_name}", f"temp\\{file_name}")
+
+    return "temp"
 
 def get_nova_hub_json():
     import settings
@@ -405,3 +370,146 @@ class check_modpack:
         except FileNotFoundError as e:
             create_folder(".\\installers")
             return False
+
+    def need_update(self, modpack_code_name):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        #Grab nova_hub.json from web server.
+        data_json = get_nova_hub_json()
+
+        display_name = data_json["packs"][modpack_code_name]["names"]["display_name"]
+
+        #Check for updates.
+        print_and_log(None, f"Checking if {display_name} needs an update...")
+
+        #Grab mod_packs.json...
+        path = Nova_Dir.get_nova_universe_directory()
+        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+            modpacks_json = json.load(f)
+        
+        #Look for modpack's current version on webserver.
+        ver = data_json['packs'][modpack_code_name]['ver']
+
+        #Decide if it needs an update or not.
+        try:
+            if ver > modpacks_json[modpack_code_name]['ver']:
+                print_and_log("info_2", f"Found an update for {display_name}")
+                print_and_log()
+                return True
+
+            else:
+                print_and_log(None, f"{display_name} is update to date.")
+                print_and_log()
+                return False
+        except KeyError as e:
+            return None #This mod pack is not installed.
+            print_and_log()
+
+        del nova_dir
+
+class mc_launcher:
+    def create_profile(self, code_name, profile_name, folder_name, todays_date, block_icon=None, base_64_icon_string=None, mc_version_name=None, java_args=None):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        try:
+            print_and_log(None, f"Creating mc launcher profile for {profile_name}...")
+            mc_path = Nova_Dir.get_mc_game_directory()
+            print(mc_path)
+            with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
+                launcher_profiles_json = json.load(f)
+
+            launcher_profiles_json["profiles"][code_name] = {}
+
+            if not block_icon == None:
+                launcher_profiles_json["profiles"][code_name]["icon"] = str(block_icon)
+                print_and_log(None, "Added " + str(block_icon))
+
+            if not base_64_icon_string == None:
+                launcher_profiles_json["profiles"][code_name]["icon"] = f"data:image/png;base64,{base_64_icon_string}"
+                print_and_log(None, "Added " + str(base_64_icon_string))
+
+            if not mc_version_name == None:
+                launcher_profiles_json["profiles"][code_name]["lastVersionId"] = mc_version_name
+                print_and_log(None, "Added " + str(mc_version_name))
+
+            launcher_profiles_json["profiles"][code_name]["name"] = profile_name
+            print_and_log(None, "Added " + str(profile_name))
+
+            path = Nova_Dir.get_nova_universe_directory()
+            launcher_profiles_json["profiles"][code_name]["gameDir"] = (path + f"\\{folder_name}")
+            print_and_log(None, "Added " + path + f"\\{folder_name}")
+
+            launcher_profiles_json["profiles"][code_name]["javaArgs"] = java_args
+            print_and_log(None, "Added " + str(java_args))
+
+            launcher_profiles_json["profiles"][code_name]["lastUsed"] = todays_date
+            print_and_log(None, "Added " + str(todays_date))
+
+            launcher_profiles_json["profiles"][code_name]["type"] = ""
+
+            with open(mc_path + "\\launcher_profiles.json", "w") as f: #Write
+                json.dump(launcher_profiles_json, f)
+                print_and_log("info_2", "Saved JSON")
+
+        except Exception as e:
+            print_and_log("warn", f"An error occurred while creating a MC launcher profile for {profile_name}")
+            print_and_log("error", e)
+
+        del nova_dir
+
+    def edit_profile(self, code_name, profile_name, value_to_edit, new_value):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        try:
+            print_and_log(None, f"Editing mc launcher profile for {profile_name}...")
+            mc_path = Nova_Dir.get_mc_game_directory()
+            print(mc_path)
+            with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
+                launcher_profiles_json = json.load(f)
+
+            if value_to_edit.lower() == "block_icon":
+                launcher_profiles_json["profiles"][code_name]["icon"] = str(new_value)
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit.lower() == "base64_icon":
+                launcher_profiles_json["profiles"][code_name]["icon"] = f"data:image/png;base64,{new_value}"
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit == "lastVersionId":
+                launcher_profiles_json["profiles"][code_name]["lastVersionId"] = new_value
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit.lower() == "name":
+                launcher_profiles_json["profiles"][code_name]["name"] = new_value
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit == "gameDir":
+                path = Nova_Dir.get_nova_universe_directory()
+                launcher_profiles_json["profiles"][code_name]["gameDir"] = (path + f"\\{new_value}")
+                print_and_log(None, "Added " + path + f"\\{new_value}")
+
+            if value_to_edit == "javaArgs":
+                launcher_profiles_json["profiles"][code_name]["javaArgs"] = new_value
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit == "lastUsed":
+                launcher_profiles_json["profiles"][code_name]["lastUsed"] = new_value
+                print_and_log(None, "Added " + str(new_value))
+
+            if value_to_edit.lower() == "type":
+                launcher_profiles_json["profiles"][code_name]["type"] = new_value
+
+            with open(mc_path + "\\launcher_profiles.json", "w") as f: #Write
+                json.dump(launcher_profiles_json, f)
+                print_and_log("info_2", "Saved JSON")
+                print_and_log()
+
+        except Exception as e:
+            print_and_log("warn", f"An error occurred while editing the MC launcher profile for {profile_name}")
+            print_and_log("error", e)
+            print_and_log()
+
+        del nova_dir

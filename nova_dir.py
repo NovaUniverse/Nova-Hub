@@ -28,7 +28,11 @@ class Nova_Dir:
 
 	@staticmethod
 	def get_mc_game_directory():
-		platform = sys.platform 
+		platform = sys.platform
+
+		path = Nova_Dir.get_nova_universe_directory()
+		with open(path + "\\#.nova_hub\\user_settings.json", "r") as f:
+			user_settings_json = json.load(f)
 
 		if not user_settings_json[".mc_path"] == None: #For Players that dump .minecraft in a different directory.
 			custom_path = user_settings_json[".mc_path"]
@@ -43,7 +47,11 @@ class Nova_Dir:
 
 	@staticmethod
 	def get_mc_launcher_directory():
-		platform = sys.platform 
+		platform = sys.platform
+
+		path = Nova_Dir.get_nova_universe_directory()
+		with open(path + "\\#.nova_hub\\user_settings.json", "r") as f:
+			user_settings_json = json.load(f)
 
 		if not user_settings_json["mc_launcher_path"] == None: #For Players that installed minecraft launcher in a different directory.
 			custom_path = user_settings_json["mc_launcher_path"]
