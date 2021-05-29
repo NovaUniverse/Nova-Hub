@@ -21,6 +21,7 @@ import math
 
 import settings
 from nova_func import *
+from nova_dir import *
 
 import ctypes
 #ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
@@ -66,14 +67,6 @@ def live_run_status(run, frame): #Updates
         progress['value'] = run.live_installer_progress_bar
 
         time.sleep(0.06)
-
-'''
-t3=threading.Thread(target=run.run) #Run thread.
-t3.setDaemon(True)
-
-t4=threading.Thread(target=run.run, args=(["RESTORE_FORGE"])) #Restore Forge Run thread.
-t4.setDaemon(True)
-'''
 
 def nav_bar():
     global installations_menu
@@ -189,7 +182,7 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
-    def install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, installer, run, run_option):
+    def install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, code_name, run, nova_hub_json):
         def finish_effect():
             time.sleep(2)
             
@@ -231,7 +224,7 @@ def installations_menu(button_used, previous_frame):
         colours_text = list(hex_colour.range_to(Color("black"), 12))
 
         #Threads needed for install.
-        t3=threading.Thread(target=run.run, args=([run_option])) #Run Installer thread.
+        t3=threading.Thread(target=run.run, args=(["NORMAL"])) #Run Installer thread.
         t3.setDaemon(True)
         t3.start()
 
@@ -245,9 +238,33 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
+        #Create mc launcher profile for mod pack.
+        from datetime import datetime
+        todays_date = datetime.now().isoformat() #Getting current date.
+
+        profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
+        ver = nova_hub_json["packs"][code_name]["ver"]
+        folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
+        block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
+        mc_version = nova_hub_json["packs"][code_name]["mc_version"]
+        default_java_args = nova_hub_json["packs"][code_name]["java_args"]
+
+        create_mc_launcher_profile(code_name, profile_name + f" - V{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+
         t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
         t5.setDaemon(True)
         t5.start()
+
+        #Add installed mod pack to modpacks.json
+        path = Nova_Dir.get_nova_universe_directory()
+        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+            modpacks_json = json.load(f)
+
+        modpacks_json[code_name] = {}
+        modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+
+        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+            json.dump(modpacks_json, f)
 
         t9=threading.Thread(target=finish_effect)
         t9.setDaemon(True)
@@ -255,10 +272,8 @@ def installations_menu(button_used, previous_frame):
 
     #Drawing modpacks from web server. ---------------------------------
 
-    with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
-        nova_hub_json = json.loads(url.read().decode())
-
-        modpack_list = nova_hub_json["packs"]
+    nova_hub_json = get_nova_hub_json()
+    modpack_list = nova_hub_json["packs"]
 
     for mod_pack in modpack_list:
         is_modpack_installed = False
@@ -341,7 +356,7 @@ def installations_menu(button_used, previous_frame):
             print_and_log("info_2", f"Install script for {display_name} has been found.")
 
             try:
-                print_and_log(None, f"Importing {display_name} Script...\n")
+                print_and_log(None, f"Importing {display_name} Script...")
                 run = importlib.import_module(f"installers.{mod_pack}.run")
 
             except Exception as e:
@@ -362,7 +377,8 @@ def installations_menu(button_used, previous_frame):
             installs_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
             cursor="hand2")
             installs_button.config(command=lambda modpack_frame=modpack_frame, installs_button=installs_button, pack_image_frame=pack_image_frame, version_label=version_label, modpack_title=modpack_title, 
-            settings_button=settings_button, mod_pack=mod_pack, run=run, run_option="NORMAL" : install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, settings_button, mod_pack, run, "NORMAL"))
+            settings_button=settings_button, mod_pack=mod_pack, run=run, nova_hub_json=nova_hub_json : install_modpack(modpack_frame, installs_button, pack_image_frame, version_label, modpack_title, 
+            settings_button, mod_pack, run, nova_hub_json))
             installs_button.photo = tkimage
             installs_button.place(x=64, y=210)
             installs_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
@@ -401,8 +417,6 @@ def installations_menu(button_used, previous_frame):
             t8.start()
 
         amount_of_installers =+ 1
-        downloaded_modpacks['modpacks'][mod_pack.lower()] = {} #Adds installer to avalible modpacks list.
-        downloaded_modpacks['modpacks'][mod_pack.lower()]['ver'] = pack_version
 
         t3=threading.Thread(target=modpack_updater, args=(["NORMAL"]))
         t3.start()
@@ -435,8 +449,10 @@ Nova Hub is an app that players can use to rapidly install Mod Packs for game mo
 Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future.
 
     """
+    #Popup Notification: To finish later...
 
-    popup_notification("big_message", "Welcome to Nova Hub!", message)
+    #returned_val = popup_notification("yes_no_prompt", "Welcome to Nova Hub!", message)
+    #print(returned_val)
 
 amount_of_news = 0
 
@@ -707,10 +723,31 @@ def popup_notification(noti_type, title=None, message=None):
     noti_font_title = font.Font(family='Arial Rounded MT Bold', size=20, weight='bold', underline=False)
     message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
 
-    if noti_type.lower() == "yes_no_prompt":
-        noti_window = Toplevel(bg="#171717")
+    return_value = None
 
-    if noti_type.lower() == "big_message":
+    def noti_exit(return_val):
+        global return_value
+        return_value = return_val
+
+        return return_value
+
+    def wait_for_response_thread():
+        #Thread that is ran to pause application after message is displayed.
+        while True:
+            print(return_value)
+            time.sleep(0.001)
+
+            if return_value is True:
+                noti_window.withdraw()
+                return True
+
+            if return_value is False:
+                noti_window.withdraw()
+                return False
+
+    #Where I left off (26/05/2021)
+
+    if noti_type.lower() == "ok": #Okay prompt
         noti_window = Toplevel(bg="#171717", height=200, width=600)
         noti_window.resizable(False, False)
         noti_window.title(title)
@@ -731,10 +768,48 @@ def popup_notification(noti_type, title=None, message=None):
         #Ok Button
         ok_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
         ok_button = Button(noti_window, text="Ok!", font=ok_button_font, padx=5, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
-        cursor="hand2", command=lambda: noti_window.withdraw())
+        cursor="hand2", command=lambda: noti_exit(True))
         ok_button.pack()
         ok_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
         ok_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
+
+    if noti_type.lower() == "yes_no_prompt": #Yes and No Prompt
+        noti_window = Toplevel(bg="#171717", height=200, width=600)
+        noti_window.resizable(False, False)
+        noti_window.title(title)
+
+        #Big Title
+        title_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=700)
+        title_label.pack(pady=0)
+
+        #Message
+        message_frame = Frame(noti_window, width=730, height=300, bg="#171717")
+        message_frame.pack(padx=5)
+
+        message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        message_label = Label(message_frame, text=message, font=message_label_font, fg="#BDBDBD", bg="#171717", wraplength=700)
+        message_label.pack()
+
+        #Yes Button
+        yes_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+        yes_button = Button(noti_window, text="Yes!", font=yes_button_font, padx=5, pady=5, fg="#D46757", bg="#00FF7F", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2", command=lambda: noti_exit(True))
+        yes_button.pack(side="left", padx=(250, 5), pady=(0, 20))
+        yes_button.bind("<Enter>", lambda event, start_colour="#00FF7F": button_hover_enter(event, start_colour="#00FF7F"))
+        yes_button.bind("<Leave>", lambda event, end_colour="#00FF7F": button_hover_leave(event, end_colour="#00FF7F"))
+
+        #No Button
+        no_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+        no_button = Button(noti_window, text="No", font=no_button_font, padx=10, pady=5, fg="#D46757", bg="#971B1B", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2", command=lambda: noti_exit(False))
+        no_button.pack(side="right", padx=(5, 250), pady=(0, 20))
+        no_button.bind("<Enter>", lambda event, start_colour="#971B1B": button_hover_enter(event, start_colour="#971B1B"))
+        no_button.bind("<Leave>", lambda event, end_colour="#971B1B": button_hover_leave(event, end_colour="#971B1B"))
+
+
+    t11=threading.Thread(target=wait_for_response_thread)
+    t11.start()
 
 def finish(thread_to_wait_for, open_mc_launcher=True):
 
@@ -743,26 +818,35 @@ def finish(thread_to_wait_for, open_mc_launcher=True):
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
-    close_button = Button(main_frame, text="Close!", font=("Arial Bold", 12), padx=5, pady=1, fg="#E1D8D8", bg="#8A0004", 	
-    activebackground="#13472D", command=app_close)   
-    #close_button.pack(side=BOTTOM)
-
 def modpack_updater(option=None):
     def check_modpacks_for_update():
 
         #Check for updates.
-        for mod_pack in downloaded_modpacks['modpacks']:
+        print_and_log(None, "Checking if currently installed mod packs have an update...")
+        print_and_log()
 
+        #Grab mod_packs.json...
+        path = Nova_Dir.get_nova_universe_directory()
+        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+            modpacks_json = json.load(f)
+        
+        #Grab nova_hub.json from web server.
+        data_json = get_nova_hub_json()
+
+        for mod_pack in modpacks_json:
             #Look for that modpack's current version on webserver.
-            with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
-                data_json = json.loads(url.read().decode())
-                ver = data_json['packs'][mod_pack]['ver']
+            ver = data_json['packs'][mod_pack]['ver']
+            display_name = data_json["packs"][mod_pack]["names"]["display_name"]
 
             #Decide if it needs an update or not.
-            if int(ver) > int(downloaded_modpacks['modpacks'][mod_pack]['ver']):
+            if int(ver) > int(modpacks_json[mod_pack]['ver']):
+                print_and_log("info_2", f"Found an update for {display_name}")
 
                 #Update the pack.
                 download_update()
+
+            else:
+                print_and_log(None, f"{display_name} is update to date.")
 
     def download_update():
         #Where I left off
@@ -1069,7 +1153,7 @@ def app_close():
         pass
 
 def start_up():
-    nav_bar() #Loads Nav Bar
+    nav_bar() #Loads everything
 
 t1=threading.Thread(target=start_up)
 t1.setDaemon(True)

@@ -86,64 +86,61 @@ def check_for_update():
         #Update...
 
         live_status_text.config(text="Starting Update...")
-        update_app("app")
+        update_comfirmation = update_app("app")
 
         #End of update
-
-        nova_func.print_and_log("INFO_2", "Nova Hub done updating to version {}".format(str(ver)))
+        
+        if update_comfirmation == True:
+            nova_func.print_and_log("INFO_2", "Nova Hub done updating to version {}".format(str(ver)))
 
     import settings
 
     if ver <= settings.version: #Up to date
-        nova_func.print_and_log("INFO", "Nova Hub is up to date. Your on version {}".format(str(ver)))
+        nova_func.print_and_log("INFO", "Nova Hub is up to date. Your on version {}".format(str(settings.version)))
         live_status_text.config(text="Up to Date")
         
 def update_app(mode):
     import nova_func
     
     if mode.lower() == "app":
-        import nova_func
-        
-        nova_func.download_file(settings.api + settings.nova_hub_update_package_location, "update.zip", live_status_text) #Download update package.
 
-        nova_func.extract_zip("update.zip", live_status_text) #Extracts update package.
+        #Run Updater
+        try:
+            import subprocess
+            subprocess.call("update.exe")
+            exit
+            sys.exit()
 
-        nova_func.move_file("temp/update", ".")
+        except Exception as e:
+            nova_func.print_and_log("warn", "Nova Hub failed to run update.exe, so it's going to skip this update.")
+            nova_func.print_and_log("error", e)
 
-        files = os.listdir("./update")
-
-        nova_func.print_and_log(None, files)
-
-        for file in files:
-            nova_func.delete_file(file)
-
-        nova_func.move_files("./update/", ".", live_status_text, replace=True) #Move files from update package to root dir to replace old files.
-
-        del nova_func #Un-importing the function module.
-        
-        import nova_func
-
-        nova_func.delete_file("update.zip")
-        nova_func.delete_file("update")
-
-        del nova_func
+            return False
 
 def check_nova_hub_appdata_folder():
-    if not "#.nova_hub" in nova_func.check_dir(f"{settings.appdata_dir}\\.NovaUniverse"):
-        #Create #.novc_hub folder.
-        nova_func.create_nova_hub_appdata_folder()
+    #Find the nova_universe directory.
+    import nova_dir
+    from nova_dir import Nova_Dir
+    path = Nova_Dir.get_nova_universe_directory()
+    del nova_dir
 
-        #Find the nova_universe directory.
-        import nova_dir
-        path = nova_dir.Nova_Dir.get_nova_universe_directory()
-        del nova_dir
+    if not "#.nova_hub" in nova_func.check_dir(path):
+        #Create #.nova_hub folder.
+        nova_func.create_nova_hub_appdata_folder()
 
         #Download user_settings.json template from webserver.
         with urllib.request.urlopen(settings.api + settings.user_settings_json_template_location) as url:
             template_json = json.loads(url.read().decode())
 
+        #Create user_settings.json
         with open(path + "\\#.nova_hub\\user_settings.json", 'w') as f:
             json.dump(template_json, f)
+
+    if not "mod_packs.json" in nova_func.check_dir(f"{path}\\#.nova_hub"):
+        #Create modpacks.json
+        modpacks_json = {}
+        with open(path + "\\#.nova_hub\\mod_packs.json", 'w') as f:
+            json.dump(modpacks_json, f)
         
 def run_update_service():
     pass

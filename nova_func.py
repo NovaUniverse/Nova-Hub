@@ -114,7 +114,7 @@ def delete_file(file):
     try:
         try:
             os.remove(file) #Deleting as fiile
-        except WindowsError as e:
+        except OSError as e:
             shutil.rmtree(file) #If not file delete as directory with it's contexts.
         print_and_log(None, "[Done]")
         live_installer_status = "[Done]"
@@ -203,12 +203,12 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
             if not text_label == None:
                 text_label.config(text="[Done]")
 
-        except OSError as e:
+        except Exception as e:
             if replace == True: #Deletes File and replaces it with new file. (Basically overwrites the file.)
                 print_and_log("INFO", "Deleting file '{}'...".format(f))
                 if not text_label == None:
                     text_label.config(text="Deleting file '{}'...".format(f))
-                delete_file(from_dir + f)
+                delete_file(target_dir + "\\" + f)
 
                 print_and_log(None, "[DONE]")
                 if not text_label == None:
@@ -219,7 +219,12 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
                 if not text_label == None:
                     text_label.config(text=f"Moving {f} to {target_dir}")
 
-                shutil.move(from_dir + f, target_dir)
+                try:
+                    shutil.move(from_dir + f, target_dir)
+                except Exception as e:
+                    print_and_log("WARN", f"Could not replace {f}, so we skiping the file.")
+                    pass
+
                 print_and_log(None, "[Done]")
 
                 if not text_label == None:
@@ -230,7 +235,6 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
                 print_and_log()
                 if not text_label == None:
                     text_label.config(text=e)
-                return False
 
 
     print_and_log()
@@ -293,12 +297,42 @@ def check_dir(path_to_dir):
     files = os.listdir(path_to_dir)
     return files
 
-def create_mc_launcher_profile():
+def create_mc_launcher_profile(code_name, profile_name, folder_name, todays_date, block_icon=None, base_64_icon_string=None, mc_version_name=None, java_args=None):
+    import nova_dir
+    from nova_dir import Nova_Dir
+
     try:
-        pass #Work in progress
+        mc_path = Nova_Dir.get_mc_game_directory()
+        with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
+            launcher_profiles_json = json.load(f)
+
+        launcher_profiles_json["profiles"][code_name] = {}
+
+        if not block_icon == None:
+            launcher_profiles_json["profiles"][code_name]["icon"] = str(block_icon)
+
+        if not base_64_icon_string == None:
+            launcher_profiles_json["profiles"][code_name]["icon"] = f"data:image/png;base64,{base_64_icon_string}"
+
+        if not mc_version_name == None:
+            launcher_profiles_json["profiles"][code_name]["lastVersionId"] = mc_version_name
+
+        launcher_profiles_json["profiles"][code_name]["name"] = profile_name
+
+        path = Nova_Dir.get_nova_universe_directory()
+        launcher_profiles_json["profiles"][code_name]["gameDir"] = (path + f"\\{folder_name}")
+
+        launcher_profiles_json["profiles"][code_name]["javaArgs"] = java_args
+
+        launcher_profiles_json["profiles"][code_name]["lastUsed"] = todays_date
+
+        launcher_profiles_json["profiles"][code_name]["type"] = ""
+
+        with open(mc_path + "\\launcher_profiles.json", "w") as f: #Write
+            json.dump(launcher_profiles_json, f)
 
     except Exception as e:
-        pass
+        print_and_log("error", e)
 
 def create_nova_hub_appdata_folder():
     import settings
@@ -362,7 +396,12 @@ class check_modpack:
 
         path = settings.path_to_installers
         del settings
-        if modpack_code_name in check_dir(path):
-            return True
-        else:
+        try:
+            if modpack_code_name in check_dir(path):
+                return True
+            else:
+                return False
+
+        except FileNotFoundError as e:
+            create_folder(".\\installers")
             return False

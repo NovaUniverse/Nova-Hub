@@ -10,6 +10,7 @@ import requests
 import stat
 import subprocess
 
+script_name = "TERRA SMP : SCRIPT"
 
 from . import settings
 from . import game_directory_finder
@@ -17,14 +18,15 @@ from . import game_directory_finder
 #Try using Nova Hub's function file first. (Only works if runing script from Nova Hub.)
 try:
     from . import nova_func
-    from nova_func import print_and_log
-    print_and_log("info", "Using functions from Nova Hub.")
+    from nova_func import print_and_log, create_mc_launcher_profile
+    print_and_log("info", f"[{script_name}] Using functions from Nova Hub.")
+    print_and_log()
 
 except ImportError: #If error import function file from root.
     import nova_func
-    from nova_func import print_and_log
+    from nova_func import print_and_log, create_mc_launcher_profile
     print_and_log("warn", "The script failed to use functions from Nova Hub so it's own temporary functions.\n(Runing the script alone without Nova Hub is not recommended as they may be bugs and we won't be able to fix those bugs.)")
-
+    print_and_log()
 
 current_dir = os.path.dirname(os.path.realpath(__file__)) #Current Working Dir
 
@@ -332,15 +334,6 @@ def move_file(f, target_dir): #Move a single file
         live_installer_status = e
         return False
 
-def create_mc_launcher_profile():
-    global live_installer_status
-
-    try:
-        pass #Work in progress
-
-    except Exception as e:
-        pass
-
 def exit_run(): 
     #Exit script
     print_and_log(None, "Exiting in...")
@@ -486,7 +479,6 @@ def run(option=None): #This is the main run script that actualy runs the script 
           "type" : "custom"
 
         '''
-        #Where I left off. (14/05/2021)
 
         #Open MC Launcher
         live_installer_status = "Opening MC Launcher..."
