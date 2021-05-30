@@ -11,9 +11,7 @@ import stat
 import subprocess
 
 script_name = "TERRA SMP : SCRIPT"
-
-from . import settings
-from . import game_directory_finder
+modpack_code_name = "terra_smp"
 
 #Try using Nova Hub's function file first. (Only works if running script from Nova Hub.)
 try:
@@ -45,6 +43,7 @@ ran_as_script = False
 
 current_dir = os.path.dirname(os.path.realpath(__file__)) #Current Working Dir
 
+'''
 temp_folder_path = settings.temp_folder_path
 path_to_logs = settings.path_to_logs
 path_to_appdata_folder = settings.path_to_appdata_folder
@@ -54,70 +53,10 @@ path_to_mc_versions_folder = settings.path_to_mc_versions_folder
 forge_ver_name = settings.forge_ver_name
 path_to_old_forge_folder = settings.path_to_old_forge_folder
 path_to_mc_launcher_exe = settings.path_to_mc_launcher_exe
+'''
 
 live_installer_status = "Starting script..." #Status for installer gui.
 live_installer_progress_bar = 0
-
-def create_temp_folder(path=""):
-    global live_installer_status
-    #Create Temp Folder.
-    live_installer_status = "Creating Temp Folder..."
-    print_and_log(None, "Creating Temp Folder in '" + path + temp_folder_path + "'")
-    try:
-        os.mkdir(path + temp_folder_path)
-        os.chmod("temp", stat.S_IWRITE) #Turn off read only.
-        return True
-
-    except FileExistsError as e:
-        live_installer_status = "[Temp Folder Already Exists]"
-        print_and_log("INFO", "Temp Folder Already Exists.")
-        print_and_log()
-        return None
-
-def clear_temp_folder():
-    global live_installer_status
-    live_installer_status = "Clearing Temp Folder..."
-    print_and_log(None, "Clearing Temp Folder...")
-    temp_files = os.listdir(temp_folder_path)
-
-    try:
-        for f in temp_files:
-            print_and_log(None, f"Removing {f}")
-            try:
-                os.remove(temp_folder_path + f) #Deleting as fiile
-            except WindowsError as e:
-                shutil.rmtree(temp_folder_path + f) #If not file delete as directory with it's contexts.
-            print_and_log(None, "[Done]")
-
-        print_and_log()
-        return True
-
-    except OSError as e:
-        print_and_log("ERROR", f"Error occured while clearing temp folder. \n {e}")
-        return False
-
-def clear_mods_folder():
-    global live_installer_status
-    live_installer_status = "Clearing Mods Folder..."
-    print_and_log(None, "Clearing Mods Folder...")
-    temp_files = os.listdir(path_to_mods_folder)
-
-    try:
-        for f in temp_files:
-            print_and_log(None, f"Removing {f}")
-            try:
-                os.remove(path_to_mods_folder + f) #Deleting as fiile
-            except WindowsError as e:
-                shutil.rmtree(path_to_mods_folder + f) #If not file delete as directory with it's contexts.
-            print_and_log(None, "[Done]")
-
-        print_and_log()
-        return True
-
-    except OSError as e:
-        print_and_log("ERROR", f"Error occured while clearing temp folder. \n {e}")
-        print_and_log()
-        return False
 
 def exit_run(): 
     #Exit script
@@ -136,7 +75,7 @@ def exit_run():
     exit
 
 def run(option=None): #This is the main run script that actualy runs the script to install the modpack.
-    print_and_log("APP_NAME", "[{}]".format(settings.app_name))
+    print_and_log("APP_NAME", "[{}]".format(script_name))
     global live_installer_status
     global live_installer_progress_bar
 
@@ -145,15 +84,17 @@ def run(option=None): #This is the main run script that actualy runs the script 
 
     if option.upper() == 'NORMAL': #Creates terra smp folder, installs forge and installs mods.
 
-        #Create Temp Folder.
+        #Create and clear Temp Folder.
         create_temp_folder()
+        clear_temp_folder()
         live_installer_progress_bar = 3
 
         #Create Nova Universe App Data Folder.
-        create_appdata_folder()
+        create_nova_hub_appdata_folder()
         live_installer_progress_bar = 6
 
         #Create Terra SMP Folder.
+        path_to_appdata_folder = Nova_Dir.get_nova_universe_directory()
         create_folder(f"{path_to_appdata_folder}\\TerraSMP")
         live_installer_progress_bar = 9
 
@@ -161,65 +102,33 @@ def run(option=None): #This is the main run script that actualy runs the script 
         live_installer_status = "Downloading Forge..."
         print_and_log(None, "Downloading Forge...")
 
-        forge_zip_dir = temp_folder_path + "forge.zip"
-        download_file(settings.forge_zip_url, forge_zip_dir)
+        destination_path = download_modpack_file(modpack_code_name, "forge.zip")
         live_installer_progress_bar = 20
 
         #Extract Forge Zip.
         live_installer_status = "Extracting Forge..."
         print_and_log(None, "Extracting Forge...")
-        extract_zip(forge_zip_dir)
+        extract_zip(destination_path + "\\forge.zip")
         live_installer_progress_bar = 40
 
-        #If 1.12.2 forge exists in mc versions, move to old_forge folder.
-        found_old_forge = None
-        found_replacement_forge = None
-        live_installer_status = "Checking if Forge is already installed..."
-        print_and_log(None, "Checking if a version of Forge is already installed...")
+        #Find versions folder.
+        nova_hub_json = get_nova_hub_json()
+        path_to_dot_minecraft = Nova_Dir.get_mc_game_directory()
+        path_to_mc_versions_folder = path_to_dot_minecraft + "\\versions"
 
-        files_in_mc_versions_dir = os.listdir(settings.path_to_mc_versions_folder)
-        live_installer_progress_bar = 42
-        
-        for version in files_in_mc_versions_dir:
-            print_and_log(None, version)
-            if str(version[ 0 : 13 ]) in settings.forge_1_12_2_identifiers:#
-                live_installer_progress_bar = 44
-                found_replacement_forge = True
-                found_old_forge = False
-                if not version == settings.forge_ver_name: #If the version it has found is exact same
-                    found_old_forge = True                          #version as replacement forge then do not replace.
-                    found_replacement_forge = False
-                    live_installer_progress_bar = 46
-                    print_and_log("INFO_2", f"Found {version}")
+        #Move Forge to mc versions folder.
+        live_installer_status = "Moving Forge..."
+        print_and_log(None, "Moving Forge...")
+        mc_version_name = nova_hub_json["packs"]["terra_smp"]["mc_version"]
+        forge_dir = destination_path + "\\forge" + f"\\{mc_version_name}"
 
-                    #Create old_forge folder.
-                    create_folder("old_forge")
-                    live_installer_progress_bar = 48
+        extract_zip(forge_dir + ".zip")
+        move_confirmation = move_file(forge_dir, path_to_mc_versions_folder)
 
-                    #Move this forge version to old_forge folder.
-                    old_forge_dir = settings.path_to_mc_versions_folder + "\\" + version
-                    move_file(old_forge_dir, "./" + path_to_old_forge_folder)
-                    live_installer_progress_bar = 52
-
-                    break
-
-        live_installer_progress_bar = 52
-
-        if found_old_forge == None:
-            print_and_log("INFO", "Forge was not Found")
-            print_and_log()
-
-        if found_replacement_forge == True:
-            print_and_log("INFO", "Replacement Forge Already Exsits")
-            print_and_log()
-
-        if not found_replacement_forge == True:
-            #Move Forge to mc versions folder.
-            live_installer_status = "Moving Forge..."
-            print_and_log(None, "Moving Forge...")
-            forge_dir = temp_folder_path + "\\" + settings.forge_ver_name
-            move_file(forge_dir, settings.path_to_mc_versions_folder)
-            live_installer_progress_bar = 56
+        if move_confirmation == False:
+            #Delete previous forge and move new forge.
+            delete_file(path_to_mc_versions_folder + f"\\{mc_version_name}")
+            move_file(forge_dir, path_to_mc_versions_folder)
 
         live_installer_progress_bar = 58
         clear_temp_folder() #Deletes all files in temp folder.
@@ -228,28 +137,32 @@ def run(option=None): #This is the main run script that actualy runs the script 
         #Download Mods Zip.
         live_installer_status = "Downloading Mods..."
         print_and_log(None, "Downloading Mods...")
-
-        mod_zip_dir = temp_folder_path + "mods.zip"
-        download_file(settings.modpack_zip_url, mod_zip_dir)
+        destination_path = download_modpack_file(modpack_code_name, "mods.zip")
         live_installer_progress_bar = 62
 
         #Extract Mods Zip.
         live_installer_status = "Extracting Mods..."
         print_and_log(None, "Extracting Mods...")
-        extract_zip(mod_zip_dir)
+        extract_zip(destination_path + "\\mods.zip")
         live_installer_progress_bar = 64
 
         #Delete Mods Zip.
-        delete_file(mod_zip_dir)
+        delete_file(destination_path + "\\mods.zip")
         live_installer_progress_bar = 66
 
+        #Find nova_universe dir
+        path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+
         #Move the mods to TerraSMP appdata folder.
-        mods_folder = create_folder(path_to_terra_smp_dir + "\\mods")
+        mods_folder = create_folder(path_to_nova_universe_dir + "\\TerraSMP\\mods")
         live_installer_progress_bar = 68
-        clear_mods_folder() #Makes sure there are no mods in the folder.
+        clear_mods_folder("terra_smp") #Makes sure there are no mods in the folder.
         live_installer_progress_bar = 70
-        move_files(temp_folder_path, path_to_mods_folder)
+        move_files(destination_path + "\\mods", path_to_nova_universe_dir + "\\TerraSMP\\mods", replace=True)
         live_installer_progress_bar = 72
+
+        #Clear temp
+        clear_temp_folder()
 
         #Download Shaders Zip.
         live_installer_status = "Downloading Shaders..."
@@ -276,7 +189,7 @@ def run(option=None): #This is the main run script that actualy runs the script 
         move_files(destination_path + "\\shaders", path_to_nova_universe_dir + "\\TerraSMP" + "\\shaderpacks", replace=True)
         live_installer_progress_bar = 96
 
-        #Clear temp folder
+        #Clear temp
         clear_temp_folder()
 
         #Open MC Launcher
@@ -290,6 +203,7 @@ def run(option=None): #This is the main run script that actualy runs the script 
         print_and_log()
 
         if ran_as_script == True:
+            path_to_mc_launcher_exe = Nova_Dir.get_mc_launcher_directory()
             subprocess.call(path_to_mc_launcher_exe)
             exit_run()
 
@@ -297,24 +211,6 @@ def run(option=None): #This is the main run script that actualy runs the script 
             sys.exit()
 
         return True
-
-    if option.upper() == 'RESTORE_FORGE': #Restores the forge version that got removed during the install.
-
-        live_installer_status = "Restoring Forge..."
-        print_and_log(None, "Restoring Forge...")
-
-        path_exist = None
-        path_exist = os.path.exists(path_to_old_forge_folder)
-
-        if path_exist == True:
-            move_files("./" + path_to_old_forge_folder, path_to_mc_versions_folder) #Move all versions of forge in here to mc versions folder.
-            delete_file(path_to_mc_versions_folder + "\\" + forge_ver_name) #Delete replacement forge.
-            return True
-
-        if path_exist == False:
-            live_installer_status = "[No Forge Versions to Restore]"
-            print_and_log("info", "No Forge Versions to Restore")
-            return None
 
     if option.upper() == 'UPDATE':
         if not ran_as_script == True:
@@ -340,7 +236,6 @@ def run(option=None): #This is the main run script that actualy runs the script 
 
             live_installer_progress_bar = 40
 
-            files_in_mc_versions_dir = os.listdir(settings.path_to_mc_versions_folder)
             live_installer_progress_bar = 42
 
             nova_hub_json = get_nova_hub_json()
@@ -426,13 +321,13 @@ if __name__ == '__main__':
         print_and_log()
     
     #Check if os is supported.
-    is_supported = game_directory_finder.GameDirectoryFinder.is_supported()
+    is_supported = Nova_Dir.is_supported()
     
     if is_supported == True:
         run(option)
 
     if is_supported == False:
-        print_and_log("ERROR", "This OS is not supported. The installer only supports Windows and Linix.")
+        print_and_log("ERROR", "This OS is not supported. The installer only supports Windows at the moment.")
         print_and_log()
 
         exit_run()

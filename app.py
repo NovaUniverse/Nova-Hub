@@ -553,6 +553,8 @@ def installations_menu(button_used, previous_frame):
 
         amount_of_installers =+ 1
 
+    print_and_log()
+
 def home_menu(button_used, previous_frame):
     global home_frame
 
@@ -964,68 +966,6 @@ def finish(thread_to_wait_for, open_mc_launcher=True):
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
 
-def modpack_updater(option=None, modpack_frame=None):
-    def check_modpacks_for_update():
-
-        #Check for updates.
-        print_and_log(None, "Checking if currently installed mod packs have an update...")
-        print_and_log()
-
-        #Grab mod_packs.json...
-        path = Nova_Dir.get_nova_universe_directory()
-        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
-            modpacks_json = json.load(f)
-        
-        #Grab nova_hub.json from web server.
-        data_json = get_nova_hub_json()
-
-        for mod_pack in modpacks_json:
-            #Look for that modpack's current version on webserver.
-            ver = data_json['packs'][mod_pack]['ver']
-            display_name = data_json["packs"][mod_pack]["names"]["display_name"]
-
-            #Decide if it needs an update or not.
-            if int(ver) > int(modpacks_json[mod_pack]['ver']):
-                print_and_log("info_2", f"Found an update for {display_name}")
-
-                #Set update button.
-                update_image = Image.open(settings.path_to_images + "nova_hub_update_button.png")
-
-                width, height = update_image.size
-                
-                actual_width = round(int(width)/14)
-                actual_height = round(int(height)/14)
-
-                update_image = update_image.resize((actual_width, actual_height))
-                tkimage = ImageTk.PhotoImage(update_image)
-                update_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#C06565", borderwidth=0, 
-                cursor="hand2")
-                update_button.config(command=None) #Insert update_modpack function here.
-                update_button.photo = tkimage
-                update_button.place(x=64, y=210)
-                update_button.bind("<Enter>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-                modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_enter(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
-                update_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
-                modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
-
-                #Update the pack.
-                download_update()
-
-            else:
-                print_and_log(None, f"{display_name} is update to date.")
-
-    def download_update():
-        #Where I left off
-        pass
-
-    if option == None:
-        option = "NORMAL"
-
-    if option.upper() == "NORMAL":
-        #Check all modpacks for updates.
-        check_modpacks_for_update()
-        pass
-        
 def button_hover_enter(e, start_colour=None, end_colour=None):
 
     if start_colour == None:

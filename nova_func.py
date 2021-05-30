@@ -308,6 +308,69 @@ def create_nova_hub_appdata_folder():
         print_and_log("ERROR", e)
         return False
 
+def clear_mods_folder(modpack_code_name):
+    import nova_dir
+    from nova_dir import Nova_Dir
+
+    print_and_log(None, "Clearing Mods Folder...")
+
+    nova_hub_json = get_nova_hub_json(silent=True)
+    modpack_folder_name = nova_hub_json["packs"][modpack_code_name]["names"]["folder_name"]
+    path_to_mods_folder = (Nova_Dir.get_nova_universe_directory() + f"\\{modpack_folder_name}\\mods")
+
+    mod_files = os.listdir(path_to_mods_folder)
+
+    try:
+        for f in mod_files:
+            print_and_log(None, f"Removing {f}")
+            try:
+                os.remove(path_to_mods_folder + f) #Deleting as fiile
+            except WindowsError as e:
+                shutil.rmtree(path_to_mods_folder + f) #If not file delete as directory with it's contexts.
+            print_and_log(None, "[Done]")
+
+        print_and_log()
+        return True
+
+    except OSError as e:
+        print_and_log("ERROR", f"Error occured while clearing temp folder. \n {e}")
+        print_and_log()
+        return False
+
+def clear_temp_folder():
+    print_and_log(None, "Clearing Temp Folder...")
+    temp_files = os.listdir(".\\temp")
+
+    try:
+        for f in temp_files:
+            print_and_log(None, f"Removing {f}")
+            try:
+                os.remove(".\\temp\\" + f) #Deleting as fiile
+            except WindowsError as e:
+                shutil.rmtree(".\\temp\\" + f) #If not file delete as directory with it's contexts.
+            print_and_log(None, "[Done]")
+
+        print_and_log()
+        return True
+
+    except OSError as e:
+        print_and_log("ERROR", f"Error occured while clearing temp folder. \n {e}")
+        return False
+
+def create_temp_folder():
+    #Create Temp Folder.
+    print_and_log(None, "Creating Temp Folder...")
+    try:
+        os.mkdir(".\\logs")
+        os.chmod("temp", stat.S_IWRITE) #Turn off read only.
+        return True
+
+    except FileExistsError as e:
+        live_installer_status = "[Temp Folder Already Exists]"
+        print_and_log("INFO", "Temp Folder Already Exists.")
+        print_and_log()
+        return None
+
 def get_size(bytes, suffix="B"):
     """
     Scale bytes to its proper format
@@ -327,15 +390,17 @@ def download_modpack_file(modpack_code_name, file_name):
 
     return "temp"
 
-def get_nova_hub_json():
+def get_nova_hub_json(silent=False):
     import settings
-    print_and_log(None, "Connecting to API to grab nova_hub.json...")
+    if silent == False:
+        print_and_log(None, "Connecting to API to grab nova_hub.json...")
     try:
         with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
             nova_hub_json = json.loads(url.read().decode())
 
-        print_and_log("info_2", "Grabbed json successfully!")
-        print_and_log()
+        if silent == False:
+            print_and_log("info_2", "Grabbed json successfully!")
+            print_and_log()
 
         return nova_hub_json
 
