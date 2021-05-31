@@ -12,6 +12,7 @@ nova_hub_update_package_location = "/update.zip" #Where the update package is st
 mod_pack_installers_location = "/installers" #Web directory where the modpack installers will be located.
 nova_hub_modpack_location = "/mod_packs"
 user_settings_json_template_location = "/user_settings_template.json"
+updater_script_location = "/updater_script.zip"
 
 nova_universe_url = "https://www.youtube.com/c/TheGoldenPro" #Change this to novauniverse website domain.
 

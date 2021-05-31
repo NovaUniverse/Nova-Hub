@@ -27,6 +27,17 @@ class Nova_Dir:
 			return None
 
 	@staticmethod
+	def get_appdata_directory():
+		platform = sys.platform 
+
+		if platform == "win32":
+			return os.getenv('APPDATA')
+		elif platform == "linux":
+			return os.getenv("HOME")
+		else:
+			return None
+
+	@staticmethod
 	def get_mc_game_directory():
 		platform = sys.platform
 
@@ -61,6 +72,17 @@ class Nova_Dir:
 			return os.getenv('PROGRAMFILES(X86)') + "\\Minecraft Launcher\\MinecraftLauncher.exe"
 		elif platform == "linux":
 			return os.getenv("HOME") + "/.minecraft"
+		else:
+			return None
+
+	@staticmethod
+	def get_programs_folder():
+		platform = sys.platform
+
+		if platform == "win32":
+			return os.getenv('PROGRAMFILES')
+		elif platform == "linux":
+			return os.getenv("HOME")
 		else:
 			return None
 

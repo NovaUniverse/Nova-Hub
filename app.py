@@ -37,6 +37,7 @@ downloaded_modpacks = {}
 downloaded_modpacks['modpacks'] = {}
 
 installs_button = None #Installs button needs to be global so I can choose not disble it when I'm looping through all of them in mod pack settings menu.
+popup_noti_return_value = None
 
 def live_run_status(run, frame): #Updates
     global live_installer_status
@@ -121,11 +122,13 @@ def installations_menu(button_used, previous_frame):
     global progress
     global live_status_text
 
-    reset_clickable(settings.button_list)
-
-    make_unclickable(button_used)
-    button_used.bind("<Enter>", button_hover_enter)
-    button_used.bind("<Leave>", button_hover_leave)
+    if not button_used == None: #Don't reset buttons if no button was used to get here.
+        reset_clickable(settings.button_list)
+    
+    if not button_used == None:
+        make_unclickable(button_used)
+        button_used.bind("<Enter>", button_hover_enter)
+        button_used.bind("<Leave>", button_hover_leave)
 
     if not previous_frame == None:
         previous_frame.pack_forget()
@@ -380,6 +383,33 @@ def installations_menu(button_used, previous_frame):
         t9.setDaemon(True)
         t9.start()
 
+    def download_modpack_script(code_name, nova_hub_json):
+        def download_modpack_script_thread(code_name, nova_hub_json):
+            display_name = nova_hub_json["packs"][code_name]["names"]["display_name"]
+            thread = popup_notification("yes_no_prompt", f"Would you like to download the script for {display_name}?", "The script will allow you to install and manage the modpack.")
+            thread.join()
+
+            if popup_noti_return_value == True: #Download script.
+                path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
+                destination_path = download_modpack_file(code_name, path_to_script)
+
+                extract_zip(destination_path + "\\script.zip")
+
+                create_folder(settings.path_to_installers + f"\\{code_name}")
+
+                move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
+
+                clear_temp_folder()
+
+                installations_frame.pack_forget()
+
+                installations_menu(None, None)
+
+
+        t12=threading.Thread(target=download_modpack_script_thread, args=([code_name, nova_hub_json]))
+        t12.setDaemon(True)
+        t12.start()
+
     #Drawing modpacks from web server. ---------------------------------
 
     nova_hub_json = get_nova_hub_json()
@@ -455,7 +485,7 @@ def installations_menu(button_used, previous_frame):
         tkimage = ImageTk.PhotoImage(grey_install_image)
         install_button = Button(modpack_frame, text="Install", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#282727", activebackground="#282727", borderwidth=0, 
         cursor="hand2")
-        install_button.config(command=None)
+        install_button.config(command=lambda code_name=code_name, nova_hub_json=nova_hub_json : download_modpack_script(code_name, nova_hub_json))
         install_button.photo = tkimage
         install_button.place(x=64, y=210)
 
@@ -583,10 +613,24 @@ Nova Hub is an app that players can use to rapidly install Mod Packs for game mo
 Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future.
 
     """
-    #Popup Notification: To finish later...
 
-    #returned_val = popup_notification("yes_no_prompt", "Welcome to Nova Hub!", message)
-    #print(returned_val)
+    #Welcome popup.
+    with open(".\\popup_noti_cache.json", "r") as f:
+        popup_noti_json = json.load(f)
+
+    try:
+        tutorial = popup_noti_json["tutorial"]
+    except KeyError as e:
+        tutorial = None
+
+    if tutorial == None:
+        thread = popup_notification("ok", "Welcome to Nova Hub!", message)
+        thread.join()
+
+    popup_noti_json["tutorial"] = False
+
+    with open(".\\popup_noti_cache.json", 'w') as f:
+        json.dump(popup_noti_json, f)
 
 amount_of_news = 0
 
@@ -871,29 +915,46 @@ def popup_notification(noti_type, title=None, message=None):
     noti_font_title = font.Font(family='Arial Rounded MT Bold', size=20, weight='bold', underline=False)
     message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
 
-    return_value = None
+    popup_noti_json = {}
+    popup_noti_json["return_value"] = None
+    popup_noti_json["tutorial"] = False
 
-    def noti_exit(return_val):
-        global return_value
-        return_value = return_val
-
-        return return_value
+    with open(".\\popup_noti_cache.json", 'w') as f:
+        json.dump(popup_noti_json, f)
 
     def wait_for_response_thread():
         #Thread that is ran to pause application after message is displayed.
-        while True:
-            print(return_value)
-            time.sleep(0.001)
 
-            if return_value is True:
-                noti_window.withdraw()
-                return True
+        def wait_for_response():
+            global popup_noti_return_value
 
-            if return_value is False:
-                noti_window.withdraw()
-                return False
+            while True:
+                with open(".\\popup_noti_cache.json", "r") as f:
+                    popup_noti_json = json.load(f)
 
-    #Where I left off (26/05/2021)
+                return_value = popup_noti_json["return_value"]
+
+                time.sleep(0.01)
+
+                if return_value is True:
+                    noti_window.withdraw()
+                    popup_noti_return_value = True
+                    return True
+
+                if return_value is False:
+                    noti_window.withdraw()
+                    popup_noti_return_value = False
+                    return False
+
+        wait_for_response()
+
+    def noti_exit(return_val):
+        popup_noti_json["return_value"] = return_val
+
+        with open(".\\popup_noti_cache.json", 'w') as f:
+            json.dump(popup_noti_json, f)
+
+        return return_val
 
     if noti_type.lower() == "ok": #Okay prompt
         noti_window = Toplevel(bg="#171717", height=200, width=600)
@@ -902,7 +963,7 @@ def popup_notification(noti_type, title=None, message=None):
 
         #Big Title
         title_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
-        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=700)
+        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=600)
         title_label.pack(pady=0)
 
         #Message
@@ -928,7 +989,7 @@ def popup_notification(noti_type, title=None, message=None):
 
         #Big Title
         title_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
-        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=700)
+        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=600)
         title_label.pack(pady=0)
 
         #Message
@@ -937,13 +998,13 @@ def popup_notification(noti_type, title=None, message=None):
 
         message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
         message_label = Label(message_frame, text=message, font=message_label_font, fg="#BDBDBD", bg="#171717", wraplength=700)
-        message_label.pack()
+        message_label.pack(pady=(10, 0))
 
         #Yes Button
         yes_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
         yes_button = Button(noti_window, text="Yes!", font=yes_button_font, padx=5, pady=5, fg="#D46757", bg="#00FF7F", activebackground="#FEBCBC", borderwidth=0, 
         cursor="hand2", command=lambda: noti_exit(True))
-        yes_button.pack(side="left", padx=(250, 5), pady=(0, 20))
+        yes_button.pack(side="left", padx=(250, 5), pady=20)
         yes_button.bind("<Enter>", lambda event, start_colour="#00FF7F": button_hover_enter(event, start_colour="#00FF7F"))
         yes_button.bind("<Leave>", lambda event, end_colour="#00FF7F": button_hover_leave(event, end_colour="#00FF7F"))
 
@@ -951,13 +1012,15 @@ def popup_notification(noti_type, title=None, message=None):
         no_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
         no_button = Button(noti_window, text="No", font=no_button_font, padx=10, pady=5, fg="#D46757", bg="#971B1B", activebackground="#FEBCBC", borderwidth=0, 
         cursor="hand2", command=lambda: noti_exit(False))
-        no_button.pack(side="right", padx=(5, 250), pady=(0, 20))
+        no_button.pack(side="right", padx=(5, 250), pady=20)
         no_button.bind("<Enter>", lambda event, start_colour="#971B1B": button_hover_enter(event, start_colour="#971B1B"))
         no_button.bind("<Leave>", lambda event, end_colour="#971B1B": button_hover_leave(event, end_colour="#971B1B"))
 
-
     t11=threading.Thread(target=wait_for_response_thread)
+    t11.setDaemon(True)
     t11.start()
+
+    return t11
 
 def finish(thread_to_wait_for, open_mc_launcher=True):
 

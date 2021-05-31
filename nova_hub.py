@@ -86,7 +86,7 @@ def check_for_update():
         #Update...
 
         live_status_text.config(text="Starting Update...")
-        update_comfirmation = update_app("app")
+        update_comfirmation = update_app("whole_app")
 
         #End of update
         
@@ -102,7 +102,7 @@ def check_for_update():
 def update_app(mode):
     import nova_func
     
-    if mode.lower() == "app":
+    if mode.lower() == "whole_app":
 
         #Run Updater
         try:
@@ -112,7 +112,7 @@ def update_app(mode):
             sys.exit()
 
         except Exception as e:
-            nova_func.print_and_log("warn", "Nova Hub failed to run update.exe, so it's going to skip this update.")
+            nova_func.print_and_log("warn", "Nova Hub failed to run update.exe, so it's going to skip this update. (Ignore this if you are running nova hub as source code.)")
             nova_func.print_and_log("error", e)
 
             return False
@@ -142,11 +142,43 @@ def check_nova_hub_appdata_folder():
         with open(path + "\\#.nova_hub\\mod_packs.json", 'w') as f:
             json.dump(modpacks_json, f)
 
+    #Download assets folder if not avalible.
+    if not "assets" in nova_func.check_dir("."):
+        #Download assets
+        nova_func.download_file(settings.api + "/assets.zip", ".\\assets.zip") #Test if it's possible to download a folder that's not a zip.
+        nova_func.extract_zip(".\\assets.zip")
+        nova_func.move_files(".\\temp", ".")
+
+        nova_func.delete_file(".\\assets.zip")
+        
+        nova_func.clear_temp_folder()
+
+    #Download updater script if not avalible
+    if not "update.exe" in nova_func.check_dir("."):
+        if not "update.py" in nova_func.check_dir("."): #This is here to prevent the app from downloading the exacutable version of the script if the .py version already exists.
+            #Download assets
+            nova_func.download_file(settings.api + settings.updater_script_location, ".\\updater_script.zip") #Test if it's possible to download a folder that's not a zip.
+            nova_func.extract_zip(".\\updater_script.zip")
+            nova_func.move_files(".\\temp\\updater_script", ".")
+
+            nova_func.delete_file(".\\updater_script.zip")
+            nova_func.delete_file(".\\updater_script")
+            
+            nova_func.clear_temp_folder()
+
+    #Create installers folder if not avalible.
+    if not "installers" in nova_func.check_dir("."):
+        #Create installers folder.
+        nova_func.create_folder(".\\installers")
+        
+
 def check_assets_folder():
     pass
     
 def run_update_service():
     pass
+
+check_nova_hub_appdata_folder() #This stays here, don't you dear move it OR THINGS WILL BREAK! I'm warning you!
 
 window = Tk()
 
@@ -202,9 +234,6 @@ if __name__ == '__main__':
 
     else:
         window.destroy() #Kills Update Window
-
-        t2=threading.Thread(target=check_nova_hub_appdata_folder)
-        t2.start()
 
         t1 = threading.Thread(target=launch_app, args=([]))
         t1.start()
