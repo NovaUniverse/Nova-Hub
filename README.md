@@ -11,3 +11,4 @@
   * nova_hub.py - This python file is bascally the ring around the app.py. It's what checks for Nova Hub updates; manages them and also repairs the app if there's any missing files.
   * app.py - This is the gui app itself. This is usually ran by the nova_hub.py file.
   * nova_func - This is where I store all the globally used functions for the purpose of keeping the code neat in general.
+
