@@ -18,6 +18,7 @@ from tkhtmlview import HTMLLabel
 import emoji
 import psutil
 import math
+import pygame
 
 import settings
 from nova_func import *
@@ -39,6 +40,8 @@ downloaded_modpacks['modpacks'] = {}
 installs_button = None #Installs button needs to be global so I can choose not disble it when I'm looping through all of them in mod pack settings menu.
 popup_noti_return_value = None
 
+no_connection = False
+
 def live_run_status(run, frame): #Updates
     global live_installer_status
     global lrs
@@ -58,7 +61,7 @@ def live_run_status(run, frame): #Updates
 
     progress = Progressbar(main_frame, style="terra.Horizontal.TProgressbar", orient=HORIZONTAL, length=600, mode='determinate')
     progress['value'] = run.live_installer_progress_bar
-    progress.pack(pady=10)
+    progress.pack(pady=(0, 10))
     
     while lrs == True:
         live_installer_status = run.live_installer_status
@@ -248,52 +251,79 @@ def installations_menu(button_used, previous_frame):
         hex_colour = Color("#C52612") #Text
         colours_text = list(hex_colour.range_to(Color("black"), 12))
 
-        #Threads needed for install.
-        t3=threading.Thread(target=run.run, args=(["NORMAL"])) #Run Installer thread.
-        t3.setDaemon(True)
-        t3.start()
+        def install_thread():
+            #Install Effect
+            hex_colour = Color("#C06565")
+            colours = list(hex_colour.range_to(Color("#00C03E"), 20))
 
-        t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
-        t2.setDaemon(True)
-        t2.start()
+            hex_colour = Color("#C52612") #Text
+            colours_text = list(hex_colour.range_to(Color("black"), 12))
 
-        time.sleep(0.1)
+            if nova_hub_json["packs"][code_name]["GAC"] == True:
+                terms_and_conditions = nova_hub_json["GAC_terms"]
+                thread = popup_notification("agree_cancel", "Goose Anticheat", terms_and_conditions)
+                thread.join()
 
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
-        t8.setDaemon(True)
-        t8.start()
+            if popup_noti_return_value == True: #Install
+                #Threads needed for install.
+                t3=threading.Thread(target=run.run, args=(["NORMAL"])) #Run Installer thread.
+                t3.setDaemon(True)
+                t3.start()
 
-        #Create mc launcher profile for mod pack.
-        from datetime import datetime
-        todays_date = datetime.now().isoformat() #Getting current date.
+                t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
+                t2.setDaemon(True)
+                t2.start()
 
-        profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
-        ver = nova_hub_json["packs"][code_name]["ver"]
-        folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
-        block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
-        mc_version = nova_hub_json["packs"][code_name]["mc_version"]
-        default_java_args = nova_hub_json["packs"][code_name]["java_args"]
+                time.sleep(0.1)
 
-        mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+                t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+                t8.setDaemon(True)
+                t8.start()
 
-        t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
-        t5.setDaemon(True)
-        t5.start()
+                #Create mc launcher profile for mod pack.
+                from datetime import datetime
+                todays_date = datetime.now().isoformat() #Getting current date.
 
-        #Add installed mod pack to modpacks.json
-        path = Nova_Dir.get_nova_universe_directory()
-        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
-            modpacks_json = json.load(f)
+                profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
+                ver = nova_hub_json["packs"][code_name]["ver"]
+                folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
+                block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
+                mc_version = nova_hub_json["packs"][code_name]["mc_version"]
+                default_java_args = nova_hub_json["packs"][code_name]["java_args"]
 
-        modpacks_json[code_name] = {}
-        modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+                mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
 
-        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
-            json.dump(modpacks_json, f)
+                t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
+                t5.setDaemon(True)
+                t5.start()
 
-        t9=threading.Thread(target=finish_effect)
-        t9.setDaemon(True)
-        t9.start()
+                #Add installed mod pack to modpacks.json
+                path = Nova_Dir.get_nova_universe_directory()
+                with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+                    modpacks_json = json.load(f)
+
+                modpacks_json[code_name] = {}
+                modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+
+                with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+                    json.dump(modpacks_json, f)
+
+                t9=threading.Thread(target=finish_effect)
+                t9.setDaemon(True)
+                t9.start()
+
+                thread = popup_notification("yes_no", "OptiFine", "Would you like to also install optifine for this modpack?")
+                thread.join()
+
+                if popup_noti_return_value == True: #Install Optifine
+                    download_optifine(code_name, nova_hub_json)
+
+            if popup_noti_return_value == False:
+                popup_notification("ok", "Goose Anticheat", "You did not agree with our terms and conditions so you can not install the modpack.")
+
+        t13=threading.Thread(target=install_thread)
+        t13.setDaemon(True)
+        t13.start()
 
     def update_modpack(modpack_frame, update_button, pack_image_frame, version_label, modpack_title, settings_button, code_name, run, nova_hub_json):
         def finish_effect():
@@ -390,21 +420,40 @@ def installations_menu(button_used, previous_frame):
             thread.join()
 
             if popup_noti_return_value == True: #Download script.
-                path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
-                destination_path = download_modpack_file(code_name, path_to_script)
+                try:
+                    path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
+                    destination_path = download_modpack_file(code_name, path_to_script)
 
-                extract_zip(destination_path + "\\script.zip")
+                    extract_zip(destination_path + "\\script.zip")
 
-                create_folder(settings.path_to_installers + f"\\{code_name}")
+                    create_folder(settings.path_to_installers + f"\\{code_name}")
 
-                move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
+                    move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
 
-                clear_temp_folder()
+                    clear_temp_folder()
 
-                installations_frame.pack_forget()
+                    installations_frame.pack_forget()
 
-                installations_menu(None, None)
+                    installations_menu(None, None)
 
+                except KeyError as e:
+                    print_and_log("error", e)
+                    popup_notification("ok", "Script Download Unavailable", """The script for this modpack is currently unavailable. It could be unavailable becasuse of the following: the modpack is coming soon or something is wrong on our web servers. (There may be more indepth infomation in the logs.)""")
+                    return False
+
+                except ConnectionError as e:
+                    print_and_log("error", e)
+                    popup_notification("ok", "Script Download Failed", """The download failed. It could have failed becasuse of the following: you have no internet connect or our web servers are down. (There may be more indepth infomation in the logs.)""")
+                    return False
+
+                except Exception as e:
+                    print_and_log("error", e)
+                    thread = popup_notification("ok", "Script Download Failed", """The download failed but we are unsure what caused it. (There may be more indepth infomation in the logs.)""")
+                    thread.join()
+
+                    popup_notification("ok", "Reporting Bugs", "To report a bug, join our discord server and open a ticket and help will come right away. The Golden Pro: Sorry about there not being a quicker way to report these bugs, I'm currently working on making this process quicker.")
+
+                    return False
 
         t12=threading.Thread(target=download_modpack_script_thread, args=([code_name, nova_hub_json]))
         t12.setDaemon(True)
@@ -413,6 +462,9 @@ def installations_menu(button_used, previous_frame):
     #Drawing modpacks from web server. ---------------------------------
 
     nova_hub_json = get_nova_hub_json()
+    if nova_hub_json == False:
+        popup_notification("ok", "API ERROR", "We could not connect to the Nova Hub API and we could find any cached files.")
+
     modpack_list = nova_hub_json["packs"]
 
     for mod_pack in modpack_list:
@@ -432,9 +484,16 @@ def installations_menu(button_used, previous_frame):
             Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.png", stream=True).raw)
         except Exception as e:
             try:
-                Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.jpeg", stream=True).raw)
+                global no_connection
+                no_connection = True #Assume there is no internet.
+                name_of_banner = nova_hub_json["packs"][mod_pack]["nova_hub_banner"]
+                Pack_Image = Image.open(f".\\nova_api_cache\\{code_name}\\{name_of_banner}")
             except Exception as e:
-                Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
+                no_connection = False
+                try:
+                    Pack_Image = Image.open(requests.get(settings.api + settings.nova_hub_modpack_location + "/" + code_name + "/" + "banner.jpeg", stream=True).raw)
+                except Exception as e:
+                    Pack_Image = Image.open(settings.path_to_images + "no_banner.png")
 
         width, height = Pack_Image.size
         
@@ -501,8 +560,9 @@ def installations_menu(button_used, previous_frame):
 
             except Exception as e:
                 print_and_log("error", e)
-                #Where I left off (20/05/2021)
-                pass
+                delete_file(settings.path_to_installers + f"\\{mod_pack}")
+
+                is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
 
             #Install Button
             install_image = Image.open(settings.path_to_images + "nova_hub_install_button.png")
@@ -600,11 +660,8 @@ def home_menu(button_used, previous_frame):
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
 
-    #news_feed_drawer(home_frame, "Help me, I've been coding for 4 hours.", ("IMPORTANT"), "Goldy", (19, "May", "10 Seconds ago"), 
-    #"I honestly think zeeraa should give me all his dogecoin in return of coding this app. I will spend it very wisely :D ")
-
     news_feed_drawer(home_frame, "NOVA HUB NEWS FEED COMING SOON...", ("IMPORTANT"), "Goldy", (18, "May", "∞ Seconds ago"), 
-    emoji.emojize("Zzzz.. Currently waiting for Zeeraa to finish the news letter system."))
+    emoji.emojize("News feed is currently being worked on..."))
 
     #webview_v2(home_frame, "https://novauniverse.net/api/private/hub/news_letter/")
     message = """
@@ -646,8 +703,31 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     stop_at_common_values = 0
     ma_checkbox_value = 0
 
-    modpack_settings_frame = Frame(main_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
-    modpack_settings_frame.pack(fill=BOTH, expand=2, padx=20, pady=15)
+    #Scrollbar ------------------------------------------------------------------------------------------
+    outer_frame = Frame(main_frame, bg="#1F1E1E") #Main App Frame
+    outer_frame.pack(fill=BOTH, expand=True)
+
+    canvas = Canvas(outer_frame, bg="#1F1E1E", highlightthickness=0, relief='ridge')
+    canvas.pack(side="left", fill="both", expand=True)
+
+    scrollbar = ttk.Scrollbar(outer_frame, orient="vertical", command=canvas.yview)
+    scrollbar.pack(side="right", fill="y")
+
+    canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    #Adds mouse scrollwheel functionality...
+    def on_mousewheel(event):
+        canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+    scrollable_frame = Frame(canvas, bg="#1F1E1E")
+
+    canvas.create_window((50, 0), window=scrollable_frame, anchor="nw")
+    #---------------------------------------------------------------------------------------------------
+
+    modpack_settings_frame = Frame(scrollable_frame, width=200, height=200, bg="#1F1E1E") #Main App Frame
+    modpack_settings_frame.pack(fill=BOTH, padx=20, pady=15)
 
     def uninstall_modpack(modpack_frame, run, code_name):
         def finish_effect():
@@ -657,54 +737,67 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
             progress.pack_forget()
             live_status_text.pack_forget()
 
-        uninstall_button.pack_forget()
+        def uninstall_modpack_thread():
+            thread = popup_notification("yes_no", "Uninstall Modpack", f"Are you sure you want to uninstall {pack_name}?")
+            thread.join()
 
-        #Threads needed for uninstall.
-        t3=threading.Thread(target=run.run, args=(["uninstall"])) #Run Installer thread.
-        t3.setDaemon(True)
-        t3.start()
+            if popup_noti_return_value == True:
+                uninstall_button.pack_forget()
 
-        t2=threading.Thread(target=live_run_status, args=([run, modpack_settings_frame])) #Live Run Stats
-        t2.setDaemon(True)
-        t2.start()
+                #Threads needed for uninstall.
+                t3=threading.Thread(target=run.run, args=(["uninstall"])) #Run Installer thread.
+                t3.setDaemon(True)
+                t3.start()
 
-        #Remove mod pack from modpacks.json
-        path = Nova_Dir.get_nova_universe_directory()
-        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
-            modpacks_json = json.load(f)
+                t2=threading.Thread(target=live_run_status, args=([run, modpack_settings_frame])) #Live Run Stats
+                t2.setDaemon(True)
+                t2.start()
 
-        modpacks_json.pop(str(code_name), None)
+                #Remove mod pack from modpacks.json
+                path = Nova_Dir.get_nova_universe_directory()
+                with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+                    modpacks_json = json.load(f)
 
-        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
-            json.dump(modpacks_json, f)
+                modpacks_json.pop(str(code_name), None)
 
-        t5=threading.Thread(target=finish, args=([t3, False])) #Finish Uninstall thread
-        t5.setDaemon(True)
-        t5.start()
+                with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+                    json.dump(modpacks_json, f)
 
-        t9=threading.Thread(target=finish_effect)
-        t9.setDaemon(True)
-        t9.start()
+                t5=threading.Thread(target=finish, args=([t3, False])) #Finish Uninstall thread
+                t5.setDaemon(True)
+                t5.start()
+
+                t9=threading.Thread(target=finish_effect)
+                t9.setDaemon(True)
+                t9.start()
+
+                time.sleep(0.5)
+                installations_menu(installs_button, outer_frame)
+
+        t14=threading.Thread(target=uninstall_modpack_thread)
+        t14.start()
 
     #Mod Pack Name
     pack_name_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
-    pack_name_label = Label(modpack_settings_frame, text=pack_name.upper() + " SETTINGS", font=pack_name_font, fg="#D46757", bg="#282727")
+    pack_name_label = Label(modpack_settings_frame, text=pack_name.upper() + " SETTINGS", font=pack_name_font, fg="#D46757", bg="#282727", cursor="hand2")
     pack_name_label.pack(fill=X)
 
     #Back Button
     back_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
     back_button = Button(modpack_settings_frame, text="Back", font=back_button_font, padx=10, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2", command=lambda: installations_menu(installs_button, modpack_settings_frame))
+    cursor="hand2", command=lambda: installations_menu(installs_button, outer_frame))
     back_button.pack(pady=10)
     back_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
     back_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
+
+
 
     #Memory Allocation Bar
     memory_allocation_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
     memory_allocation_frame.pack(fill=X, padx=20, pady=0)
 
     ma_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-    ma_text_label = Label(memory_allocation_frame, text="Memory Allocation (RAM)", font=ma_text_font, fg="#C52612", bg="#171717")
+    ma_text_label = Label(memory_allocation_frame, text="1) Memory Allocation (RAM)", font=ma_text_font, fg="#C52612", bg="#171717")
     ma_text_label.pack()
 
     def set_slider(value_to_set):
@@ -728,10 +821,19 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
 
                     time.sleep(0.1)
 
+    #Slider
     ma_slider_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
     ma_slider = Scale(memory_allocation_frame, font=ma_slider_font, fg="white", from_=1073741824, to=psutil.virtual_memory().total, length=500, sliderlength=40, orient=HORIZONTAL, 
     bg="#171717", troughcolor="#171717", cursor="hand2", activebackground="#C52612", highlightthickness=0, bd=3, showvalue=False, resolution=10000, command=edit_ram_text)
     ma_slider.pack(fill=X, padx=20, pady=5)
+
+    #Stick to values check box
+    ma_checkbox_var = IntVar()
+    ma_checkbox_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
+    ma_checkbox = Checkbutton(memory_allocation_frame, text="Stick to Common Values (ALPHA)", font=ma_checkbox_font, variable=ma_checkbox_var, bg="#171717", fg="#D46757", cursor="hand2", 
+    activebackground="#171717")
+    ma_checkbox.pack(padx=(570, 0), pady=(0, 0))
+    #ma_checkbox.place(x=680, y=0)
 
     max_amount_of_ram = get_size(psutil.virtual_memory().total)
     
@@ -744,19 +846,132 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     ma_ram_text_label = Label(memory_allocation_frame, text=f"RAM USAGE: {str(amount_of_ram)}" + f"/{str(max_amount_of_ram)} (MAX)", font=ma_ram_text_font, fg="white", bg="#171717")
     ma_ram_text_label.pack()
 
-    ma_checkbox_var = IntVar()
-    ma_checkbox_font = font.Font(family='Arial Rounded MT Bold', size=8, weight='bold', underline=False)
-    ma_checkbox = Checkbutton(memory_allocation_frame, text="Stick to Common\n Values (ALPHA)", font=ma_checkbox_font, variable=ma_checkbox_var, bg="#171717", fg="#D46757", cursor="hand2", 
-    activebackground="#171717")
-    ma_checkbox.place(x=680, y=0)
-
     is_modpack_installed = check_modpack.is_installed(None, pack_folder_name)
     is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
 
+    #Disable Ram Allocation (coming soon) (REMOVE THIS WHEN FEATURE IS DONE!)
+    ma_slider.config(state="disabled") #Disable Slider.
+    ma_text_label.config(text="Coming Soon!", fg="grey")
+    ma_checkbox.config(text="Coming Soon...", fg="grey")
+    ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=False)
+    ma_ram_text_label.config(text="Coming Soon!", font=ma_ram_text_font, fg="grey")
+    # ---------------------------------------------------------------------------------------------------------
+
+
+
+    #Preload Shaders Settings
+    preload_shaders_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
+    preload_shaders_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    ps_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    ps_text_label = Label(preload_shaders_frame, text="2) Preload Shaders (BETA)", font=ps_text_font, fg="#F4A236", bg="#171717")
+    ps_text_label.pack()
+
+    #Toggle Feature
+    ps_checkbox_var = IntVar()
+    ps_checkbox_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    ps_checkbox = Checkbutton(preload_shaders_frame, text="TOGGLE ON/OFF", font=ps_checkbox_font, variable=ps_checkbox_var, bg="#171717", fg="#F4C384", cursor="hand2", 
+    activebackground="#171717")
+    ps_checkbox.pack(side="left", padx=(10, 0))
+
+
+
+    #Migrate controls
+    migrate_controls_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
+    migrate_controls_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    mc_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    mc_text_label = Label(migrate_controls_frame, text="3) Migrate Controls", font=mc_text_font, fg="#5CCFF4", bg="#171717")
+    mc_text_label.pack()
+
+    mc_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    mc_description_label = Label(migrate_controls_frame, text=f"This setting allows you to migrate your controls over to {pack_name}.", font=mc_description_font, fg="#9FDFF3", bg="#171717")
+    mc_description_label.pack()
+
+    mc_migrate_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    mc_migrate_button = Button(migrate_controls_frame, text="Migrate", font=mc_migrate_button_font, bg="#9FDFF3", fg="white", padx=10, pady=3, activebackground="#5CCFF4", borderwidth=0, 
+    cursor="hand2")
+    mc_migrate_button.pack(pady=10)
+    mc_migrate_button.config(command=None)
+    mc_migrate_button.bind("<Enter>", lambda event, start_colour="#9FDFF3", end_colour="#5CCFF4": button_hover_enter(event, start_colour="#9FDFF3", end_colour="#5CCFF4"))
+    mc_migrate_button.bind("<Leave>", lambda event, end_colour="#9FDFF3", start_colour="#5CCFF4": button_hover_leave(event, end_colour="#9FDFF3", start_colour="#5CCFF4"))
+
+
+
+    #Download Optifine
+    download_optifine_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
+    download_optifine_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    op_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    op_text_label = Label(download_optifine_frame, text="4) Download OptiFine", font=op_text_font, fg="#C55812", bg="#171717")
+    op_text_label.pack()
+
+    op_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    op_description_label = Label(download_optifine_frame, text=f"Install OptiFine for {pack_name} here!", font=op_description_font, fg="#C57A4A", bg="#171717")
+    op_description_label.pack()
+
+    nova_hub_json = get_nova_hub_json(silent=True)
+
+    op_download_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    op_download_button = Button(download_optifine_frame, text="Download", font=op_download_button_font, bg="#C57A4A", fg="white", padx=10, pady=3, activebackground="#C55812", borderwidth=0, 
+    cursor="hand2")
+    op_download_button.pack(pady=10)
+    op_download_button.config(command=lambda code_name=code_name, nova_hub_json=nova_hub_json: download_optifine(code_name, nova_hub_json))
+    op_download_button.bind("<Enter>", lambda event, start_colour="#C57A4A", end_colour="#C55812": button_hover_enter(event, start_colour="#C57A4A", end_colour="#C55812"))
+    op_download_button.bind("<Leave>", lambda event, end_colour="#C57A4A", start_colour="#C55812": button_hover_leave(event, end_colour="#C57A4A", start_colour="#C55812"))
+
+    is_optifine_installed = check_modpack.is_optifine_downloaded(None, code_name, nova_hub_json)
+    if is_optifine_installed == True:
+        op_download_button.config(state="disabled", text="Already Installed")
+
+    #Java Args Bar
+    java_args_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
+    java_args_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    ja_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    ja_text_label = Label(java_args_frame, text="5) Java Arguments (For Advanced Users)", font=ja_text_font, fg="#C52612", bg="#171717")
+    ja_text_label.pack()
+
+    def apply(e):
+        string_from_box = e.get()
+
+        mc_launcher.edit_profile(None, code_name, display_name, "javaArgs", string_from_box)
+    
+    #Entry Box
+    ja_entry_box_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+    ja_entry_box = Entry(java_args_frame, font=ja_entry_box_font, bg="#1F1E1E", fg="white")
+    ja_entry_box.pack(fill=X, padx=20, pady=5)
+
+    if is_modpack_installed == True:
+        #Getting java arg from versions.json
+        nova_hub_json = get_nova_hub_json(silent=True)
+        display_name = nova_hub_json["packs"][code_name]["names"]["display_name"]
+
+        javaArgs = mc_launcher.read_profile(None, code_name, display_name, "javaArgs")
+        ja_entry_box.insert(0, javaArgs) #Insert java arg into entry box.
+
+    ja_apply_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    ja_apply_button = Button(java_args_frame, text="Apply", font=ja_apply_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    ja_apply_button.pack(side="right", padx=(5, 250), pady=5)
+    ja_apply_button.config(command=lambda e=ja_entry_box : apply(e=ja_entry_box))
+    ja_apply_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#4aff36": button_hover_enter(event, start_colour="#171717", end_colour="#4aff36"))
+    ja_apply_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
+
+    ja_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    ja_clear_button = Button(java_args_frame, text="Clear", font=ja_apply_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    ja_clear_button.config(command=lambda first=0, last=END : ja_entry_box.delete(first=0, last=END))
+    ja_clear_button.pack(side="left", padx=(250, 5), pady=5)
+    ja_clear_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#ffffff": button_hover_enter(event, start_colour="#171717", end_colour="#ffffff"))
+    ja_clear_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#ffffff": button_hover_leave(event, end_colour="#171717", start_colour="#ffffff"))
+
+
+
+    #Uninstall Button
     if is_modpack_installed == True:
 
         #Import run.py from script.
-
         try:
             print_and_log(None, f"Importing {pack_name} Script...\n")
             run = importlib.import_module(f"installers.{code_name}.run")
@@ -766,36 +981,48 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
             pass
 
         if is_script_downloaded == True:
-            #Uninstall Modpack Button
-            #uninstall_image = Image.open(settings.path_to_images + "nova_hub_remove_button.png")
-
-            #width, height = uninstall_image.size
-            
-            #actual_width = round(int(width)/10)
-            #actual_height = round(int(height)/10)
-
-            #uninstall_image = uninstall_image.resize((actual_width, actual_height))
-            #tkimage = ImageTk.PhotoImage(uninstall_image)
-
             uninstall_button_font = font.Font(family='Arial Rounded MT Bold', size=16, weight='bold', underline=False)
             uninstall_button = Button(modpack_settings_frame, text="Uninstall Modpack", font=uninstall_button_font, padx=15, pady=5, fg="#D46757", bg="#171717", activebackground="#FEBCBC", borderwidth=0, 
             cursor="hand2")
             uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run, code_name=code_name : uninstall_modpack(modpack_settings_frame, run, code_name))
-            uninstall_button.pack(side="bottom", pady=10)
+            uninstall_button.pack(side="bottom", pady=(40, 5))
             uninstall_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
             uninstall_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
-
-            #uninstall_button = Button(modpack_settings_frame, image=tkimage, bg="#1F1E1E", activebackground="#C06565", borderwidth=0, cursor="hand2")
-            #uninstall_button.config(command=lambda modpack_settings_frame=modpack_settings_frame, run=run, code_name=code_name : uninstall_modpack(modpack_settings_frame, run, code_name))
-            #uninstall_button.photo = tkimage
-            #uninstall_button.pack(side="bottom")
 
     #Stuff to disable if mod pack is not installed.
     if not is_modpack_installed == True:
         #Memory Allocation Bar
         ma_slider.config(state="disabled") #Disable Slider if mod pack is not installed.
+        ma_text_label.config(fg="grey")
         ma_ram_text_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=True)
         ma_ram_text_label.config(text="MOD PACK NOT INSTALLED", font=ma_ram_text_font, fg="grey")
+
+        #Java Args
+        ja_entry_box.config(state="disabled") #Disable Java Args entry box if mod pack is not installed.
+
+        ja_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', overstrike=True)
+        ja_text_label.config(fg="grey", font=ja_text_font)
+
+        ja_clear_button.config(state="disabled")
+        ja_apply_button.config(state="disabled")
+
+        #Migrate controls
+        mc_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', overstrike=True)
+        mc_text_label.config(fg="grey", font=mc_text_font)
+
+        mc_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=True)
+        mc_description_label.config(fg="grey", font=mc_description_font)
+
+        mc_migrate_button.config(state="disabled")
+
+        #Download Optifine
+        op_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', overstrike=True)
+        op_text_label.config(fg="grey", font=op_text_font)
+
+        op_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', overstrike=True)
+        op_description_label.config(fg="grey", font=op_description_font)
+
+        op_download_button.config(state="disabled")
 
 def webview(frame=None, url=None): #Wait untill module dev fixes issue.
     html_frame = HtmlFrame(frame)
@@ -837,6 +1064,9 @@ def news_feed_drawer(frame, heading, news_tag, author_name, date_time, embeded_d
     heading_text.place(x=10, y=6)
 
     #News Tag
+
+    news_tag_colour = "grey"
+
     if news_tag.upper() == 'IMPORTANT':
         news_tag_colour = "#971B1B" #Red
 
@@ -922,6 +1152,8 @@ def popup_notification(noti_type, title=None, message=None):
     with open(".\\popup_noti_cache.json", 'w') as f:
         json.dump(popup_noti_json, f)
 
+    play_sound("popup_1.mp3", volume=0.5)
+
     def wait_for_response_thread():
         #Thread that is ran to pause application after message is displayed.
 
@@ -982,7 +1214,7 @@ def popup_notification(noti_type, title=None, message=None):
         ok_button.bind("<Enter>", lambda event, start_colour="#171717": button_hover_enter(event, start_colour="#171717"))
         ok_button.bind("<Leave>", lambda event, end_colour="#171717": button_hover_leave(event, end_colour="#171717"))
 
-    if noti_type.lower() == "yes_no_prompt": #Yes and No Prompt
+    if noti_type.lower() == "yes_no": #Yes and No Prompt
         noti_window = Toplevel(bg="#171717", height=200, width=600)
         noti_window.resizable(False, False)
         noti_window.title(title)
@@ -1011,6 +1243,40 @@ def popup_notification(noti_type, title=None, message=None):
         #No Button
         no_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
         no_button = Button(noti_window, text="No", font=no_button_font, padx=10, pady=5, fg="#D46757", bg="#971B1B", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2", command=lambda: noti_exit(False))
+        no_button.pack(side="right", padx=(5, 250), pady=20)
+        no_button.bind("<Enter>", lambda event, start_colour="#971B1B": button_hover_enter(event, start_colour="#971B1B"))
+        no_button.bind("<Leave>", lambda event, end_colour="#971B1B": button_hover_leave(event, end_colour="#971B1B"))
+
+    if noti_type.lower() == "agree_cancel": #Yes and No Prompt
+        noti_window = Toplevel(bg="#171717", height=200, width=600)
+        noti_window.resizable(False, False)
+        noti_window.title(title)
+
+        #Big Title
+        title_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        title_label = Label(noti_window, text=title, font=noti_font_title, fg="#BDBDBD", bg="#171717", wraplength=600)
+        title_label.pack(pady=0)
+
+        #Message
+        message_frame = Frame(noti_window, width=730, height=300, bg="#171717")
+        message_frame.pack(padx=5)
+
+        message_label_font = font.Font(family='Arial Rounded MT Bold', size=13, weight='bold', underline=False)
+        message_label = Label(message_frame, text=message, font=message_label_font, fg="#BDBDBD", bg="#171717", wraplength=700)
+        message_label.pack(pady=(10, 0))
+
+        #Yes Button
+        yes_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+        yes_button = Button(noti_window, text="I Agree", font=yes_button_font, padx=5, pady=5, fg="#D46757", bg="#00FF7F", activebackground="#FEBCBC", borderwidth=0, 
+        cursor="hand2", command=lambda: noti_exit(True))
+        yes_button.pack(side="left", padx=(250, 5), pady=20)
+        yes_button.bind("<Enter>", lambda event, start_colour="#00FF7F": button_hover_enter(event, start_colour="#00FF7F"))
+        yes_button.bind("<Leave>", lambda event, end_colour="#00FF7F": button_hover_leave(event, end_colour="#00FF7F"))
+
+        #No Button
+        no_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+        no_button = Button(noti_window, text="Cancel", font=no_button_font, padx=10, pady=5, fg="#D46757", bg="#971B1B", activebackground="#FEBCBC", borderwidth=0, 
         cursor="hand2", command=lambda: noti_exit(False))
         no_button.pack(side="right", padx=(5, 250), pady=20)
         no_button.bind("<Enter>", lambda event, start_colour="#971B1B": button_hover_enter(event, start_colour="#971B1B"))
@@ -1045,6 +1311,8 @@ def button_hover_enter(e, start_colour=None, end_colour=None):
     t7.setDaemon(True)
     t7.start()
 
+    play_sound("hover_1.wav", volume=0.1)
+
 def button_hover_leave(e, start_colour=None, end_colour=None):
     if start_colour == None:
         hex_colour = Color("#C06565")
@@ -1076,8 +1344,20 @@ def color_glow_effect(e, hex_list):
         time.sleep(0.01)
         e.widget['background'] = '{}'.format(color)
 
-def play_sound(sound):
-    pass
+def play_sound(sound, volume=1.0):
+
+    def play_sound_thread():
+        pygame.init()
+        pygame.mixer.init()
+        sound_ = pygame.mixer.Sound(settings.path_to_assets + sound)
+        sound_.set_volume(volume) #Set's volume
+        sound_.play()     
+
+        #from playsound import playsound
+        #playsound(settings.path_to_assets + sound)
+
+    t8=threading.Thread(target=play_sound_thread)
+    t8.start()
 
 def add_image_shadow(image, iterations, border, offset, backgroundColour, shadowColour):
     # image: base image to give a drop shadow

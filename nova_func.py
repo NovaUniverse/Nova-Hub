@@ -241,26 +241,47 @@ def move_files(from_dir, target_dir, text_label=None, replace=False): #Move mult
     print_and_log()
     return True
 
-def move_file(f, target_dir, replace=False): #Move a single file
+def move_file(path_to_file, target_dir, file_name=None, text_label=None, replace=False): #Move a single file
     try:
-        print_and_log(None, f"Moving {f} to {target_dir}")
-        shutil.move(f, target_dir)
+        print_and_log(None, f"Moving {path_to_file} to {target_dir}")
+        shutil.move(path_to_file, target_dir)
 
         print_and_log(None, "[Done]")
         print_and_log()
         return True
 
-    except FileExistsError as e:
-        print_and_log("INFO", "This File Already Exists.")
-        print_and_log()
+    except Exception as e:
+        if replace == True: #Deletes File and replaces it with new file. (Basically overwrites the file.)
+            print_and_log("INFO", "Deleting file '{}'...".format(path_to_file))
+            if not text_label == None:
+                text_label.config(text="Deleting file '{}'...".format(path_to_file))
+            delete_file(target_dir + "\\" + file_name)
 
-        return False
+            print_and_log(None, "[DONE]")
+            if not text_label == None:
+                text_label.config(text="[DONE]")
 
-    except OSError as e:
-        print_and_log("ERROR", e)
-        print_and_log()
-        live_installer_status = e
-        return False
+            #Try moving again
+            print_and_log(None, f"Moving {file_name} to {target_dir}")
+            if not text_label == None:
+                text_label.config(text=f"Moving {file_name} to {target_dir}")
+
+            try:
+                shutil.move(path_to_file, target_dir)
+            except Exception as e:
+                print_and_log("WARN", f"Could not replace {path_to_file}, so we skiping the file.")
+                pass
+
+            print_and_log(None, "[Done]")
+
+            if not text_label == None:
+                text_label.config(text="[Done]")
+
+        else:
+            print_and_log("ERROR", e)
+            print_and_log()
+            if not text_label == None:
+                text_label.config(text=e)
 
 def download_file(url, download_path, text_label=None):
     import settings
@@ -390,22 +411,80 @@ def download_modpack_file(modpack_code_name, file_name):
 
     return "temp"
 
+def download_optifine(modpack_code_name, nova_hub_json):
+    import settings
+    import nova_dir
+    from nova_dir import Nova_Dir
+
+    print_and_log(None, "Finding Optifine version...")
+    optifine_ver = nova_hub_json["packs"][modpack_code_name]["files"]["optifine"]
+    folder_name = nova_hub_json["packs"][modpack_code_name]["names"]["folder_name"]
+    print_and_log(None, "[DONE]")
+
+    print_and_log(None, "Finding mods folder")
+    nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+    modpack_game_dir = nova_universe_dir + f"\\{folder_name}"
+    mods_folder = modpack_game_dir + "\\mods"
+    print_and_log(None, "[DONE]")
+
+    print_and_log(None, "Downloading OptiFine...")
+    download_file(settings.api + f"/optifine/{optifine_ver}", mods_folder + f"\\{optifine_ver}")
+    print_and_log("info_2", "[DONE]\n")
+
+    del settings
+    del nova_dir
+
 def get_nova_hub_json(silent=False):
     import settings
     if silent == False:
         print_and_log(None, "Connecting to API to grab nova_hub.json...")
+
     try:
         with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
             nova_hub_json = json.loads(url.read().decode())
 
         if silent == False:
             print_and_log("info_2", "Grabbed json successfully!")
+            print_and_log(None, "Caching data from API...")
+
+        cache_folder = create_folder(".\\nova_api_cache")
+
+        #Cache modpack banners
+        for modpack in nova_hub_json["packs"]:
+            path_to_modpack_folder = create_folder(cache_folder + f"\\{modpack}")
+
+            #Download modpack banner.
+            name_of_banner = nova_hub_json["packs"][modpack]["nova_hub_banner"]
+            destination_path = download_modpack_file(modpack, name_of_banner)
+
+            #Move banner to cache folder.
+            move_file(destination_path + f"\\{name_of_banner}", path_to_modpack_folder, file_name=name_of_banner, replace=True)
+
+        #Cache json.
+        with open(cache_folder + "\\nova_hub.json", "w") as f: #Write
+            json.dump(nova_hub_json, f)
+
+        if silent == False:
+            print_and_log("info_2", "[Caching DONE]")
             print_and_log()
 
         return nova_hub_json
 
     except Exception as e:
-        print_and_log(None, e)
+        print_and_log("error", "Failed to connect to API, grabbing json from cache instead...")
+
+        try:
+            with open(".\\nova_api_cache" + "\\nova_hub.json", "r") as f: #Read
+                nova_hub_json = json.load(f)
+
+            print_and_log("info_2", "[DONE]")
+            print_and_log()
+
+            return nova_hub_json
+
+        except FileNotFoundError as e:
+            print_and_log("error", "There's no cached files! Please check your internet connection.")
+            return False
 
     del settings
 
@@ -434,6 +513,23 @@ class check_modpack:
 
         except FileNotFoundError as e:
             create_folder(".\\installers")
+            return False
+
+    def is_optifine_downloaded(self, modpack_code_name, nova_hub_json):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        optifine_ver = nova_hub_json["packs"][modpack_code_name]["files"]["optifine"]
+        folder_name = nova_hub_json["packs"][modpack_code_name]["names"]["folder_name"]
+        nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+
+        try:
+            if optifine_ver in check_dir(nova_universe_dir + f"\\{folder_name}\\mods"):
+                return True
+            else:
+                return False
+
+        except FileNotFoundError as e:
             return False
 
     def need_update(self, modpack_code_name):
@@ -524,12 +620,12 @@ class mc_launcher:
 
         del nova_dir
 
-    def edit_profile(self, code_name, profile_name, value_to_edit, new_value):
+    def edit_profile(self, code_name, display_name, value_to_edit, new_value):
         import nova_dir
         from nova_dir import Nova_Dir
 
         try:
-            print_and_log(None, f"Editing mc launcher profile for {profile_name}...")
+            print_and_log(None, f"Editing mc launcher profile for {display_name}...")
             mc_path = Nova_Dir.get_mc_game_directory()
             print(mc_path)
             with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
@@ -573,7 +669,58 @@ class mc_launcher:
                 print_and_log()
 
         except Exception as e:
-            print_and_log("warn", f"An error occurred while editing the MC launcher profile for {profile_name}")
+            print_and_log("warn", f"An error occurred while editing the MC launcher profile for {display_name}")
+            print_and_log("error", e)
+            print_and_log()
+
+        del nova_dir
+
+    def read_profile(self, code_name, display_name, value_to_read):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        try:
+            print_and_log(None, f"Reading mc launcher profile for {display_name}...")
+            mc_path = Nova_Dir.get_mc_game_directory()
+            with open(mc_path + "\\launcher_profiles.json", "r") as f: #Read
+                launcher_profiles_json = json.load(f)
+
+            if value_to_read.lower() == "block_icon":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["icon"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read.lower() == "base64_icon":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["icon"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read == "lastVersionId":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["lastVersionId"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read.lower() == "name":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["name"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read == "gameDir":
+                path = Nova_Dir.get_nova_universe_directory()
+                value_to_return = launcher_profiles_json["profiles"][code_name]["gameDir"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read == "javaArgs":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["javaArgs"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read == "lastUsed":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["lastUsed"]
+                print_and_log(None, f"Read {value_to_return}")
+
+            if value_to_read.lower() == "type":
+                value_to_return = launcher_profiles_json["profiles"][code_name]["type"]
+
+            return value_to_return
+
+        except Exception as e:
+            print_and_log("warn", f"An error occurred while reading the MC launcher profile for {display_name}")
             print_and_log("error", e)
             print_and_log()
 

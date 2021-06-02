@@ -187,7 +187,33 @@ def run(option=None): #This is the main run script that actualy runs the script 
         create_folder(path_to_nova_universe_dir + "\\TerraSMP\\shaderpacks")
         live_installer_progress_bar = 90
         move_files(destination_path + "\\shaders", path_to_nova_universe_dir + "\\TerraSMP" + "\\shaderpacks", replace=True)
+        live_installer_progress_bar = 94
+
+        #Download Modpack assets
+        live_installer_status = "Downloading Other Assets..."
+        print_and_log(None, "Downloading Other Assets...")
+
+        destination_path = download_modpack_file("terra_smp", "modpack_assets.zip")
+        live_installer_progress_bar = 95
+
+        #Extract modpack_assets.zip
+        live_installer_status = "Extracting Other Assets..."
+        print_and_log(None, "Extracting Other Assets...")
+        extract_zip(destination_path + "\\modpack_assets.zip")
         live_installer_progress_bar = 96
+
+        #Delete modpack_assets.zip.
+        delete_file(destination_path + "\\modpack_assets.zip")
+        live_installer_progress_bar = 97
+
+        #Move assets to TerraSMP game folder.
+        path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+        live_installer_progress_bar = 98
+        create_folder(path_to_nova_universe_dir + "\\TerraSMP\\config")
+        create_folder(path_to_nova_universe_dir + "\\TerraSMP\\resources")
+        live_installer_progress_bar = 99
+        move_files(destination_path + "\\modpack_assets\\config", path_to_nova_universe_dir + "\\TerraSMP\\config", replace=True)
+        move_files(destination_path + "\\modpack_assets\\resources", path_to_nova_universe_dir + "\\TerraSMP\\resources", replace=True)
 
         #Clear temp
         clear_temp_folder()
@@ -268,6 +294,33 @@ def run(option=None): #This is the main run script that actualy runs the script 
             #Move new shaders to shaders folder.
             shaders_dir = destination_path + "\\shaders"
             move_files(mods_dir, path_to_nova_universe_dir + "\\TerraSMP\\shaderpacks", replace=True)
+
+            #Download Modpack assets
+            live_installer_status = "Downloading Other Assets..."
+            print_and_log(None, "Downloading Other Assets...")
+
+            destination_path = download_modpack_file("terra_smp", "modpack_assets.zip")
+            live_installer_progress_bar = 85
+
+            #Extract modpack_assets.zip
+            live_installer_status = "Extracting Other Assets..."
+            print_and_log(None, "Extracting Other Assets...")
+            extract_zip(destination_path + "\\modpack_assets.zip")
+            live_installer_progress_bar = 88
+
+            #Delete modpack_assets.zip.
+            delete_file(destination_path + "\\modpack_assets.zip")
+            live_installer_progress_bar = 90
+
+            #Move assets to TerraSMP game folder.
+            path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+            live_installer_progress_bar = 92
+            create_folder(path_to_nova_universe_dir + "\\TerraSMP\\config")
+            create_folder(path_to_nova_universe_dir + "\\TerraSMP\\resources")
+            live_installer_progress_bar = 94
+            move_files(destination_path + "modpack_assets\\config", path_to_nova_universe_dir + "\\TerraSMP\\config", replace=True)
+            move_files(destination_path + "modpack_assets\\resources", path_to_nova_universe_dir + "\\TerraSMP\\resources", replace=True)
+
             live_installer_progress_bar = 100
 
             clear_temp_folder()
