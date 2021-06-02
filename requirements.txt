@@ -1,8 +1,9 @@
-colour==0.1.5
 psutil==5.8.0
-tkhtmlview==0.1.0.post1
+colour==0.1.5
+winshell==0.6
+pywin32==300
 emoji==0.6.0
-ttkthemes==3.2.2
 requests==2.25.0
-tkinterweb==3.5.0
+pygame==2.0.1
+tkhtmlview==0.1.0.post1
 Pillow==8.2.0
