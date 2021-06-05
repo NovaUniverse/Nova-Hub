@@ -41,6 +41,7 @@ installs_button = None #Installs button needs to be global so I can choose not d
 popup_noti_return_value = None
 
 no_connection = False
+current_frame = None
 
 def live_run_status(run, frame): #Updates
     global live_installer_status
@@ -104,8 +105,8 @@ def nav_bar():
 
     #Home Button
     home_button = Button(buttons_bar, text="Home", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2", command=lambda: home_menu(home_button, installations_frame)) 
-    home_button.grid(row=0, column=1, padx=15)
+    cursor="hand2", command=lambda: home_menu(home_button, current_frame)) 
+    home_button.grid(row=0, column=1, padx=(15, 0))
     home_button.bind("<Enter>", button_hover_enter)
     home_button.bind("<Leave>", button_hover_leave)
 
@@ -113,17 +114,25 @@ def nav_bar():
     
     #Installations Button
     installs_button = Button(buttons_bar, text="Installations", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
-    cursor="hand2", command=lambda: installations_menu(installs_button, home_frame))
-    installs_button.grid(row=0, column=2)
+    cursor="hand2", command=lambda: installations_menu(installs_button, current_frame))
+    installs_button.grid(row=0, column=2, padx=(15, 0))
     installs_button.bind("<Enter>", button_hover_enter)
     installs_button.bind("<Leave>", button_hover_leave)
+    
+    #Settings Button
+    settings_button = Button(buttons_bar, text="Settings", font=("Arial Bold", 10), padx=5, pady=5, fg="white", bg="#1F1E1E", activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2", command=lambda: app_settings_menu(settings_button, current_frame))
+    settings_button.grid(row=0, column=3, padx=(15, 0))
+    settings_button.bind("<Enter>", button_hover_enter)
+    settings_button.bind("<Leave>", button_hover_leave)
 
-    settings.button_list = [home_button, installs_button]
+    settings.button_list = [home_button, installs_button, settings_button]
 
 def installations_menu(button_used, previous_frame):
     global installations_frame
     global progress
     global live_status_text
+    global current_frame
 
     if not button_used == None: #Don't reset buttons if no button was used to get here.
         reset_clickable(settings.button_list)
@@ -138,6 +147,8 @@ def installations_menu(button_used, previous_frame):
 
     installations_frame = Frame(main_frame, width=1280, height=720, bg="#171717")
     installations_frame.pack(fill=BOTH, expand=1)
+
+    current_frame = installations_frame
 
     amount_of_installers = 0
 
@@ -177,6 +188,8 @@ def installations_menu(button_used, previous_frame):
         t8.setDaemon(True)
         t8.start()
 
+        play_sound("hover_1.wav", volume=0.1)
+
     def install_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
         hex_colour = Color("#C06565")
         colours = list(hex_colour.range_to(Color("#282727"), 20))
@@ -198,6 +211,8 @@ def installations_menu(button_used, previous_frame):
         t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
         t8.setDaemon(True)
         t8.start()
+
+        play_sound("hover_1.wav", volume=0.1)
 
     def update_button_hover_leave(e, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button):
         hex_colour = Color("#ff8142")
@@ -647,6 +662,7 @@ def installations_menu(button_used, previous_frame):
 
 def home_menu(button_used, previous_frame):
     global home_frame
+    global current_frame
 
     reset_clickable(settings.button_list)
 
@@ -659,6 +675,8 @@ def home_menu(button_used, previous_frame):
 
     home_frame = Frame(main_frame, width=1280, height=720, bg="#171717") #Main App Frame
     home_frame.pack(fill=BOTH, expand=1)
+
+    current_frame = home_frame
 
     news_feed_drawer(home_frame, "NOVA HUB NEWS FEED COMING SOON...", ("IMPORTANT"), "Goldy", (18, "May", "∞ Seconds ago"), 
     emoji.emojize("News feed is currently being worked on..."))
@@ -688,8 +706,30 @@ Furthermore it allows for modpacks to be automatically updated, viewing the late
 
     with open(".\\popup_noti_cache.json", 'w') as f:
         json.dump(popup_noti_json, f)
-
+    
 amount_of_news = 0
+
+def app_settings_menu(button_used, previous_frame):
+    global current_frame
+
+    if not button_used == None: #Don't reset buttons if no button was used to get here.
+        reset_clickable(settings.button_list)
+    
+    if not button_used == None:
+        make_unclickable(button_used)
+        button_used.bind("<Enter>", button_hover_enter)
+        button_used.bind("<Leave>", button_hover_leave)
+
+    if not previous_frame == None:
+        previous_frame.pack_forget()
+
+    app_settings_frame = Frame(main_frame, width=1280, height=720, bg="#171717")
+    app_settings_frame.pack(fill=BOTH, expand=1)
+    current_frame = app_settings_frame #Tells nav bar that this is the current frame being viewed.
+
+    coming_soon_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
+    coming_soon_label = Label(app_settings_frame, text="Coming Soon", font=coming_soon_font, fg="white", bg="#171717")
+    coming_soon_label.pack(pady=10)
 
 def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name):
     if not previous_frame == None:
@@ -859,7 +899,7 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
 
 
 
-    #Preload Shaders Settings
+    #Preload Shaders Settings -------------------------------------
     preload_shaders_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
     preload_shaders_frame.pack(fill=X, padx=20, pady=(30, 0))
 
@@ -867,16 +907,22 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     ps_text_label = Label(preload_shaders_frame, text="2) Preload Shaders (BETA)", font=ps_text_font, fg="#F4A236", bg="#171717")
     ps_text_label.pack()
 
+    ps_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
+    ps_description_label = Label(preload_shaders_frame, text=f"Click the on/off switch to toggle shader preloading for {pack_name}.", font=ps_description_font, fg="#FFCF92", bg="#171717")
+    ps_description_label.pack()
+
     #Toggle Feature
-    ps_checkbox_var = IntVar()
-    ps_checkbox_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
-    ps_checkbox = Checkbutton(preload_shaders_frame, text="TOGGLE ON/OFF", font=ps_checkbox_font, variable=ps_checkbox_var, bg="#171717", fg="#F4C384", cursor="hand2", 
-    activebackground="#171717")
-    ps_checkbox.pack(side="left", padx=(10, 0))
+    on_button_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#65F255", activebackground="#19FF00", borderwidth=0, pady=3, padx=12, 
+    cursor="hand2")
+    on_button.config(command=None)
+    on_button.pack(side="left", padx=(20, 0), pady=(0, 20))
+    on_button.bind("<Enter>", lambda event, start_colour="#65F255", end_colour="#19FF00": button_hover_enter(event, start_colour="#65F255", end_colour="#19FF00"))
+    on_button.bind("<Leave>", lambda event, end_colour="#65F255", start_colour="#19FF00": button_hover_leave(event, end_colour="#65F255", start_colour="#19FF00"))
 
 
 
-    #Migrate controls
+    #Migrate controls -------------------------
     migrate_controls_frame = Frame(modpack_settings_frame, width=400, height=80, bg="#171717")
     migrate_controls_frame.pack(fill=X, padx=20, pady=(30, 0))
 
@@ -885,7 +931,7 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     mc_text_label.pack()
 
     mc_description_font = font.Font(family='Arial Rounded MT Bold', size=10, weight='bold', underline=False)
-    mc_description_label = Label(migrate_controls_frame, text=f"This setting allows you to migrate your controls over to {pack_name}.", font=mc_description_font, fg="#9FDFF3", bg="#171717")
+    mc_description_label = Label(migrate_controls_frame, text=f"This setting allows you to migrate your controls over to {pack_name}. \n(Will overwrite current {pack_name} controls)", font=mc_description_font, fg="#9FDFF3", bg="#171717")
     mc_description_label.pack()
 
     mc_migrate_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)

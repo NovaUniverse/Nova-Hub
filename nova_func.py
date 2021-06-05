@@ -569,6 +569,18 @@ class check_modpack:
 
         del nova_dir
 
+    class preload_shaders:
+        def is_toggled(self):
+            pass
+
+        def what_setting(self):
+            #Auto, Extreme, High, Medium, Lite.
+            pass
+
+        def auto_apply(self):
+            #Applys best shaders based on computer specs.
+            pass
+
 class mc_launcher:
     def create_profile(self, code_name, profile_name, folder_name, todays_date, block_icon=None, base_64_icon_string=None, mc_version_name=None, java_args=None):
         import nova_dir

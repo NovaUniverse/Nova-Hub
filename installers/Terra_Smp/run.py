@@ -288,6 +288,7 @@ def run(option=None): #This is the main run script that actualy runs the script 
 
             #Move new mods to mods folder.
             mods_dir = destination_path + "\\mods"
+            clear_mods_folder("terra_smp") #Makes sure there are no mods in the folder.
             move_files(mods_dir, path_to_nova_universe_dir + "\\TerraSMP\\mods", replace=True)
             live_installer_progress_bar = 80
 
