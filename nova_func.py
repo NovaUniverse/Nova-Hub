@@ -488,6 +488,56 @@ def get_nova_hub_json(silent=False):
 
     del settings
 
+class hub_settings:
+    def edit(self, section, object_to_edit, new_value):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        try:
+            print_and_log(None, f"Editing the nova hub user_settings.json")
+            nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+
+            with open(nova_universe_dir + "\\#.nova_hub\\user_settings.json", "r") as f: #Read
+                user_settings_json = json.load(f)
+
+            user_settings_json[section][object_to_edit] = new_value
+            print_and_log(None, f"Added {new_value} to {object_to_edit}.")
+
+            with open(nova_universe_dir + "\\#.nova_hub\\user_settings.json", "w") as f: #Write
+                json.dump(user_settings_json, f)
+                print_and_log("info_2", "[Saved JSON]")
+                print_and_log()
+
+        except Exception as e:
+            print_and_log("warn", f"An error occurred while editing the nova hub user_settings.json")
+            print_and_log("error", e)
+            print_and_log()
+
+        del nova_dir
+
+    def read(self, section, object_to_read):
+        import nova_dir
+        from nova_dir import Nova_Dir
+
+        try:
+            print_and_log(None, f"Reading the nova hub user_settings.json")
+            nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+
+            with open(nova_universe_dir + "\\#.nova_hub\\user_settings.json", "r") as f: #Read
+                user_settings_json = json.load(f)
+
+            value_to_return = user_settings_json[section][object_to_read]
+            print_and_log(None, f"Read {value_to_return} from {object_to_read}.")
+
+            return value_to_return
+
+        except Exception as e:
+            print_and_log("warn", f"An error occurred while reading the nova hub user_settings.json")
+            print_and_log("error", e)
+            print_and_log()
+
+        del nova_dir
+
 class check_modpack:
 
     def is_installed(self, modpack_folder_name):

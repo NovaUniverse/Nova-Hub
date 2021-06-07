@@ -45,8 +45,8 @@ class Nova_Dir:
 		with open(path + "\\#.nova_hub\\user_settings.json", "r") as f:
 			user_settings_json = json.load(f)
 
-		if not user_settings_json[".mc_path"] == None: #For Players that dump .minecraft in a different directory.
-			custom_path = user_settings_json[".mc_path"]
+		if not user_settings_json["paths"][".mc_path"] == None: #For Players that dump .minecraft in a different directory.
+			custom_path = user_settings_json["paths"][".mc_path"]
 			return custom_path
 
 		if platform == "win32":
@@ -64,8 +64,8 @@ class Nova_Dir:
 		with open(path + "\\#.nova_hub\\user_settings.json", "r") as f:
 			user_settings_json = json.load(f)
 
-		if not user_settings_json["mc_launcher_path"] == None: #For Players that installed minecraft launcher in a different directory.
-			custom_path = user_settings_json["mc_launcher_path"]
+		if not user_settings_json["paths"]["mc_launcher_exe_path"] == None: #For Players that installed minecraft launcher in a different directory.
+			custom_path = user_settings_json["paths"]["mc_launcher_exe_path"]
 			return custom_path
 
 		if platform == "win32":
@@ -100,3 +100,5 @@ try:
 
 except FileNotFoundError as e:
 	pass
+
+#arabic nokia car drip - https://youtu.be/C8N-XudEKuc

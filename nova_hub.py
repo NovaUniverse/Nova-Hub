@@ -18,6 +18,9 @@ import nova_func
 live_installer_status = "Starting..."
 live_installer_progress_bar = 0
 
+t3 = None
+live_status_string = ""
+
 def launch_app(thread_to_wait_for=None):
     if not thread_to_wait_for == None: #Waits for update thread to finish.
         thread_to_wait_for.join()
@@ -58,7 +61,17 @@ def create_status_bar(frame):
     progress = Progressbar(frame, style="terra.Horizontal.TProgressbar", orient=HORIZONTAL, length=600, mode='determinate')
     progress['value'] = 0
     progress.place(x=180, y=120)
-    
+
+def status_bar_thread():
+    global live_status_string
+
+    staus_bar = True
+
+    while staus_bar == True:
+        live_status_text.config(text=live_status_string)
+
+        time.sleep(0.006)
+
 def check_for_update():
     global live_installer_progress_bar
     global window
@@ -84,8 +97,7 @@ def check_for_update():
         del settings #Unload settings.
 
         #Update...
-
-        live_status_text.config(text="Starting Update...")
+        live_status_string = "Starting Update..."
         update_comfirmation = update_app("whole_app")
 
         #End of update
@@ -97,7 +109,7 @@ def check_for_update():
 
     if ver <= settings.version: #Up to date
         nova_func.print_and_log("INFO", "Nova Hub is up to date. Your on version {}".format(str(settings.version)))
-        live_status_text.config(text="Up to Date")
+        live_status_string = "Up to Date"
         
 def update_app(mode):
     import nova_func
@@ -171,7 +183,6 @@ def check_nova_hub_appdata_folder():
         #Create installers folder.
         nova_func.create_folder(".\\installers")
         
-
 def check_assets_folder():
     pass
     
@@ -220,8 +231,20 @@ window.iconbitmap(settings.path_to_assets + "update_icon.ico")
 window.geometry('800x200')
 window.resizable(False, False) #Makes window not resizeable
 
+t12=threading.Thread(target=status_bar_thread) #Live Status Bar
+t12.setDaemon(True)
+t12.start()
+
+def start_up_thread():
+    global t3
+
+    t3=threading.Thread(target=check_for_update)
+    t3.setDaemon(True)
+    t3.start()
+
 if __name__ == '__main__':
-    check_for_update()
+    t2 = threading.Thread(target=start_up_thread)
+    t2.start()
 
     import nova_dir
     from nova_func import print_and_log
@@ -235,10 +258,12 @@ if __name__ == '__main__':
     else:
         window.destroy() #Kills Update Window
 
-        t1 = threading.Thread(target=launch_app, args=([]))
+        t1 = threading.Thread(target=launch_app, args=([t3]))
         t1.start()
 
         t11 = threading.Thread(target=focus_on_app)
         t11.start()
 
 window.mainloop()
+
+#bad piggies drip - https://youtu.be/dkM9GxaCow4

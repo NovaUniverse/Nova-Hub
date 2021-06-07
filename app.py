@@ -43,6 +43,8 @@ popup_noti_return_value = None
 no_connection = False
 current_frame = None
 
+t12 = None
+
 def live_run_status(run, frame): #Updates
     global live_installer_status
     global lrs
@@ -341,6 +343,7 @@ def installations_menu(button_used, previous_frame):
         t13.start()
 
     def update_modpack(modpack_frame, update_button, pack_image_frame, version_label, modpack_title, settings_button, code_name, run, nova_hub_json):
+        global t12
         def finish_effect():
             time.sleep(2)
             
@@ -381,7 +384,22 @@ def installations_menu(button_used, previous_frame):
         hex_colour = Color("#C52612") #Text
         colours_text = list(hex_colour.range_to(Color("black"), 12))
 
-        #Threads needed for install.
+        #Delete old install script and download new one.
+        delete_file(settings.path_to_installers + f"\\{code_name}")
+
+        path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
+        destination_path = download_modpack_file(code_name, path_to_script)
+
+        extract_zip(destination_path + "\\script.zip")
+
+        create_folder(settings.path_to_installers + f"\\{code_name}")
+
+        move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
+
+        clear_temp_folder()
+
+        
+        #Threads needed for update.
         t3=threading.Thread(target=run.run, args=(["UPDATE"])) #Run Installer thread.
         t3.setDaemon(True)
         t3.start()
@@ -429,9 +447,10 @@ def installations_menu(button_used, previous_frame):
         t9.start()
 
     def download_modpack_script(code_name, nova_hub_json):
+        global t12
         def download_modpack_script_thread(code_name, nova_hub_json):
             display_name = nova_hub_json["packs"][code_name]["names"]["display_name"]
-            thread = popup_notification("yes_no_prompt", f"Would you like to download the script for {display_name}?", "The script will allow you to install and manage the modpack.")
+            thread = popup_notification("yes_no", f"Would you like to download the script for {display_name}?", "The script will allow you to install and manage the modpack.")
             thread.join()
 
             if popup_noti_return_value == True: #Download script.
@@ -727,9 +746,58 @@ def app_settings_menu(button_used, previous_frame):
     app_settings_frame.pack(fill=BOTH, expand=1)
     current_frame = app_settings_frame #Tells nav bar that this is the current frame being viewed.
 
+    settings_title_font = font.Font(family='Arial Rounded MT Bold', size=30, weight='bold', underline=True)
+    settings_title_label = Label(app_settings_frame, text="Nova Hub Settings", font=settings_title_font, fg="#C52612", bg="#171717", cursor="hand2")
+    settings_title_label.pack(fill=X, pady=(10, 0))
+
+
+    #Change .minecraft dirctory
+    dot_minecraft_dir_frame = Frame(app_settings_frame, width=400, height=80, bg="#171717")
+    dot_minecraft_dir_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    dmd_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    dmd_text_label = Label(dot_minecraft_dir_frame, text="Change '.minecraft' Directory", font=dmd_text_font, fg="#19F200", bg="#171717")
+    dmd_text_label.pack()
+
+    def apply(e): #Edit user settings.json.
+        value_in_box = e.get()
+
+        if value_in_box == "":
+            hub_settings.edit(None, "paths", ".mc_path", None)
+
+        else:
+            hub_settings.edit(None, "paths", ".mc_path", value_in_box)
+
+    #Entry Box
+    dmd_entry_box_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+    dmd_entry_box = Entry(dot_minecraft_dir_frame, font=dmd_entry_box_font, bg="#1F1E1E", fg="#8CE781")
+    dmd_entry_box.pack(fill=X, padx=20, pady=5)
+
+    if not hub_settings.read(None, "paths", ".mc_path") == None: #Fill up string with function that returns json objects from user_settings.json
+        path = hub_settings.read(None, "paths", ".mc_path")
+        dmd_entry_box.insert(0, path) #Insert path into entry box.
+
+    dmd_apply_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    dmd_apply_button = Button(dot_minecraft_dir_frame, text="Apply", font=dmd_apply_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    dmd_apply_button.pack(side="right", padx=(5, 250), pady=5)
+    dmd_apply_button.config(command=lambda e=dmd_entry_box : apply(e=dmd_entry_box))
+    dmd_apply_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#4aff36": button_hover_enter(event, start_colour="#171717", end_colour="#4aff36"))
+    dmd_apply_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
+
+    dmd_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    dmd_clear_button = Button(dot_minecraft_dir_frame, text="Clear", font=dmd_clear_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    dmd_clear_button.config(command=lambda first=0, last=END : dmd_entry_box.delete(first=0, last=END))
+    dmd_clear_button.pack(side="left", padx=(250, 5), pady=5)
+    dmd_clear_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#ffffff": button_hover_enter(event, start_colour="#171717", end_colour="#ffffff"))
+    dmd_clear_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#ffffff": button_hover_leave(event, end_colour="#171717", start_colour="#ffffff"))
+
+
+
     coming_soon_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
     coming_soon_label = Label(app_settings_frame, text="Coming Soon", font=coming_soon_font, fg="white", bg="#171717")
-    coming_soon_label.pack(pady=10)
+    #coming_soon_label.pack(pady=10)
 
 def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name):
     if not previous_frame == None:
@@ -913,12 +981,15 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
 
     #Toggle Feature
     on_button_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-    on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#65F255", activebackground="#19FF00", borderwidth=0, pady=3, padx=12, 
+    on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#6CD860", activebackground="#19FF00", borderwidth=0, pady=3, padx=12, 
     cursor="hand2")
     on_button.config(command=None)
     on_button.pack(side="left", padx=(20, 0), pady=(0, 20))
-    on_button.bind("<Enter>", lambda event, start_colour="#65F255", end_colour="#19FF00": button_hover_enter(event, start_colour="#65F255", end_colour="#19FF00"))
-    on_button.bind("<Leave>", lambda event, end_colour="#65F255", start_colour="#19FF00": button_hover_leave(event, end_colour="#65F255", start_colour="#19FF00"))
+    on_button.bind("<Enter>", lambda event, start_colour="#6CD860", end_colour="#19FF00": button_hover_enter(event, start_colour="#6CD860", end_colour="#19FF00"))
+    on_button.bind("<Leave>", lambda event, end_colour="#6CD860", start_colour="#19FF00": button_hover_leave(event, end_colour="#6CD860", start_colour="#19FF00"))
+
+    #Disable Migrate controls (coming soon) (REMOVE THIS WHEN FEATURE IS DONE!)
+    on_button.config(state="disabled", text="Coming Soon") #Disable Button.
 
 
 
@@ -942,6 +1013,8 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     mc_migrate_button.bind("<Enter>", lambda event, start_colour="#9FDFF3", end_colour="#5CCFF4": button_hover_enter(event, start_colour="#9FDFF3", end_colour="#5CCFF4"))
     mc_migrate_button.bind("<Leave>", lambda event, end_colour="#9FDFF3", start_colour="#5CCFF4": button_hover_leave(event, end_colour="#9FDFF3", start_colour="#5CCFF4"))
 
+    #Disable Migrate controls (coming soon) (REMOVE THIS WHEN FEATURE IS DONE!)
+    mc_migrate_button.config(state="disabled", text="Coming Soon") #Disable Button.
 
 
     #Download Optifine
@@ -1707,3 +1780,6 @@ news_list = {
 
     }
 }
+
+#Discord car drip - https://youtu.be/6U6EPxchhSU
+#(Yes here's some more drip for you...)

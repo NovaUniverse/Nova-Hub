@@ -14,7 +14,7 @@ nova_hub_modpack_location = "/mod_packs"
 user_settings_json_template_location = "/user_settings_template.json"
 updater_script_location = "/updater_script.zip"
 
-nova_universe_url = "https://www.youtube.com/c/TheGoldenPro" #Change this to novauniverse website domain.
+nova_universe_url = "https://youtu.be/C8N-XudEKuc" #Change this to novauniverse website domain.
 
 #Paths
 appdata_dir = "C:" + (os.path.join(os.environ["HOMEPATH"], "AppData\\Roaming"))
