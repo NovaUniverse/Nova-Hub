@@ -182,6 +182,14 @@ def check_nova_hub_appdata_folder():
     if not "installers" in nova_func.check_dir("."):
         #Create installers folder.
         nova_func.create_folder(".\\installers")
+
+    #Create popup_noti_cache.json if not avalible.
+    if not "popup_noti_cache.json" in nova_func.check_dir("."):
+        #Create json.
+        popup_noti_cache_json = {}
+
+        with open(".\\popup_noti_cache.json", "w") as f: #Write
+            json.dump(popup_noti_cache_json, f)
         
 def check_assets_folder():
     pass

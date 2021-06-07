@@ -18,14 +18,13 @@ from tkhtmlview import HTMLLabel
 import emoji
 import psutil
 import math
-import pygame
 
 import settings
 from nova_func import *
 from nova_dir import *
 
 import ctypes
-ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 )
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 
 app_name = settings.app_name
 
@@ -1466,11 +1465,13 @@ def color_glow_effect(e, hex_list):
 def play_sound(sound, volume=1.0):
 
     def play_sound_thread():
+        #import pygame
+
         pygame.init()
         pygame.mixer.init()
         sound_ = pygame.mixer.Sound(settings.path_to_assets + sound)
         sound_.set_volume(volume) #Set's volume
-        sound_.play()     
+        sound_.play()
 
         #from playsound import playsound
         #playsound(settings.path_to_assets + sound)
