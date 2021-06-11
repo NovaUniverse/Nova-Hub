@@ -139,6 +139,8 @@ def installations_menu(button_used, previous_frame):
     global current_frame
     global already_ran_api
 
+    amount_of_installers = 0
+
     if not button_used == None: #Don't reset buttons if no button was used to get here.
         reset_clickable(settings.button_list)
     
@@ -155,24 +157,27 @@ def installations_menu(button_used, previous_frame):
 
     current_frame = installations_frame
 
-    #API Refresh Button (WORK IN PROGRESS)
-    '''
-    launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+    def refresh_modpacks():
+        pass
 
-    width, height = launch_image.size
+    #API Refresh Button (WORK IN PROGRESS)
+    refresh_image = Image.open(settings.path_to_images + "refresh.png")
+
+    width, height = refresh_image.size
     
     actual_width = round(int(width)/14)
     actual_height = round(int(height)/14)
 
-    launch_image = launch_image.resize((actual_width, actual_height))
-    tkimage = ImageTk.PhotoImage(launch_image)
-    launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+    refresh_image = refresh_image.resize((actual_width, actual_height))
+    tkimage = ImageTk.PhotoImage(refresh_image)
+    refresh_button = Button(installations_frame, image=tkimage, bg="#171717", borderwidth=0, activebackground="#171717", 
     cursor="hand2")
-    launch_button.config()
-    launch_button.photo = tkimage
-    '''
+    refresh_button.config(command=refresh_modpacks)
+    refresh_button.grid(row=0, column=1 + amount_of_installers, padx=(15, 0), pady=15)
+    refresh_button.bind("<Enter>", lambda event, sound="hover_1.wav", volume=0.1 : play_sound(sound=sound, volume=volume))
+    refresh_button.photo = tkimage
 
-    amount_of_installers = 0
+    amount_of_installers +=1
 
     def modpack_glow_effect(modpack_frame, e, pack_image_frame, modpack_title, version_label, settings_button, hex_list, hex_list_text):
 
@@ -1082,12 +1087,12 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#6CD860", activebackground="#19FF00", borderwidth=0, pady=3, padx=12, 
     cursor="hand2")
     on_button.config(command=None)
-    on_button.pack(side="left", padx=(20, 0), pady=(0, 20))
+    on_button.pack(side="left", padx=(20, 0), pady=(10, 20))
     on_button.bind("<Enter>", lambda event, start_colour="#6CD860", end_colour="#19FF00": button_hover_enter(event, start_colour="#6CD860", end_colour="#19FF00"))
     on_button.bind("<Leave>", lambda event, end_colour="#6CD860", start_colour="#19FF00": button_hover_leave(event, end_colour="#6CD860", start_colour="#19FF00"))
 
-    #Disable Migrate controls (coming soon) (REMOVE THIS WHEN FEATURE IS DONE!)
-    on_button.config(state="disabled", text="Coming Soon") #Disable Button.
+    #Disable Preload Shaders (coming soon) (REMOVE THIS WHEN FEATURE IS DONE!)
+    on_button.config(state="disabled", text="Soon...") #Disable Button.
 
 
 
