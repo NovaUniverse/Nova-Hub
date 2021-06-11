@@ -1083,8 +1083,8 @@ def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name
     ps_description_label.pack()
 
     #Toggle Feature
-    on_button_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-    on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#6CD860", activebackground="#19FF00", borderwidth=0, pady=3, padx=12, 
+    on_button_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False) #Change to 15 size after feature done.
+    on_button = Button(preload_shaders_frame, text="ON", font=on_button_font, bg="#6CD860", activebackground="#19FF00", borderwidth=0, pady=8, padx=12, 
     cursor="hand2")
     on_button.config(command=None)
     on_button.pack(side="left", padx=(20, 0), pady=(10, 20))
