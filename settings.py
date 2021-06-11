@@ -5,8 +5,8 @@ development_stage = "DEV"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
 #Be careful when changing the locations. If you type a false location the auto updater will stop functioning.
-ip = "http://192.168.1.176"
-api = ip + "/files/nova_hub"
+ip = "https://novauniverse.net/"
+api = ip + "cdn/nova_hub"
 nova_hub_json_location = "/nova_hub.json" #Where the json file is stored on the webserver.
 nova_hub_update_package_location = "/update.zip" #Where the update package is stored on the webserver.
 mod_pack_installers_location = "/installers" #Web directory where the modpack installers will be located.
@@ -14,7 +14,7 @@ nova_hub_modpack_location = "/mod_packs"
 user_settings_json_template_location = "/user_settings_template.json"
 updater_script_location = "/updater_script.zip"
 
-nova_universe_url = "https://youtu.be/C8N-XudEKuc" #Change this to novauniverse website domain.
+nova_universe_url = "https://novauniverse.net/" #Change this to novauniverse website domain.
 
 #Paths
 appdata_dir = "C:" + (os.path.join(os.environ["HOMEPATH"], "AppData\\Roaming"))

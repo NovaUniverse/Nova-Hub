@@ -8,6 +8,9 @@ import stat
 import subprocess
 from zipfile import ZipFile
 import shutil
+import traceback
+
+import nova_var_cache
 
 def get_time_and_date(option):
 
@@ -38,11 +41,13 @@ def get_time_and_date(option):
 log_date_and_time = get_time_and_date("both") #Time run file was ran.
 
 def print_and_log(importance_level=None, text=None):
+    import colorama
+    colorama.init()
     
     if text == None: #Just makes a new line.
         print ("")
-        log("")
-        return
+        path_to_log = log("")
+        return path_to_log
 
     if not text == None:
         if importance_level == None:
@@ -105,7 +110,7 @@ def log(text):
     f = open(f"{settings.path_to_logs}{log_date_and_time}.txt", "a")
     f.write(text + "\n")
 
-    del settings
+    return f"{settings.path_to_logs}{log_date_and_time}.txt"
 
 def delete_file(file):
     live_installer_status = f"Deleting {file}..."
@@ -434,19 +439,17 @@ def download_optifine(modpack_code_name, nova_hub_json):
     del settings
     del nova_dir
 
-def get_nova_hub_json(silent=False):
+def get_nova_hub_json(silent=False, save_the_api=None):
     import settings
+
+    #Save the API: I'm saving you bandwidth zeeraa, just take it...
+     #Basically when I call this "get_nova_hub_json()" fucuntion I can choose if I want to save bandwidth and just load from cache or stream the data
+      # from the api and cache it.
+
     if silent == False:
         print_and_log(None, "Connecting to API to grab nova_hub.json...")
 
-    try:
-        with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
-            nova_hub_json = json.loads(url.read().decode())
-
-        if silent == False:
-            print_and_log("info_2", "Grabbed json successfully!")
-            print_and_log(None, "Caching data from API...")
-
+    def cache_api_stream(nova_hub_json):
         cache_folder = create_folder(".\\nova_api_cache")
 
         #Cache modpack banners
@@ -468,10 +471,47 @@ def get_nova_hub_json(silent=False):
             print_and_log("info_2", "[Caching DONE]")
             print_and_log()
 
-        return nova_hub_json
+    try:
+        if not save_the_api == True:
+
+            import urllib.request
+            req = urllib.request.Request(
+                settings.api + settings.nova_hub_json_location, 
+                data=None, 
+                headers={
+                    'User-Agent': str(settings.app_name)
+                }
+            )
+
+            with urllib.request.urlopen(req) as url:
+                nova_hub_json = json.loads(url.read().decode())
+
+            if silent == False:
+                print_and_log("info_2", "Grabbed json successfully!")
+                print_and_log(None, "Caching data from API...")
+
+            import threading
+            t11=threading.Thread(target=cache_api_stream, args=([nova_hub_json]))
+            t11.setDaemon(True)
+            t11.start()
+
+            nova_var_cache.already_connect_to_api = True
+
+            return nova_hub_json
+
+        if save_the_api == True:
+            print_and_log("info", ":) Saving bandwidth and just using data from cache. (Click refresh button to connect to the api and refresh modpacks.)")
+            with open(".\\nova_api_cache" + "\\nova_hub.json", "r") as f: #Read
+                nova_hub_json = json.load(f)
+
+            print_and_log("info_2", "[DONE]")
+            print_and_log()
+
+            return nova_hub_json
 
     except Exception as e:
-        print_and_log("error", "Failed to connect to API, grabbing json from cache instead...")
+        print_and_log("error", "Failed to connect to our API, grabbing json from cache instead...")
+        print_and_log(None, traceback.print_exc())
 
         try:
             with open(".\\nova_api_cache" + "\\nova_hub.json", "r") as f: #Read
@@ -483,7 +523,7 @@ def get_nova_hub_json(silent=False):
             return nova_hub_json
 
         except FileNotFoundError as e:
-            print_and_log("error", "There's no cached files! Please check your internet connection.")
+            print_and_log("error", "We could not connect to our api and there's no cached files! Please check your internet connection.")
             return False
 
     del settings
@@ -510,7 +550,7 @@ class hub_settings:
 
         except Exception as e:
             print_and_log("warn", f"An error occurred while editing the nova hub user_settings.json")
-            print_and_log("error", e)
+            print_and_log("error", traceback.print_exc())
             print_and_log()
 
         del nova_dir
@@ -533,7 +573,7 @@ class hub_settings:
 
         except Exception as e:
             print_and_log("warn", f"An error occurred while reading the nova hub user_settings.json")
-            print_and_log("error", e)
+            print_and_log("error", traceback.print_exc())
             print_and_log()
 
         del nova_dir
@@ -582,12 +622,12 @@ class check_modpack:
         except FileNotFoundError as e:
             return False
 
-    def need_update(self, modpack_code_name):
+    def need_update(self, modpack_code_name, nova_hub_json):
         import nova_dir
         from nova_dir import Nova_Dir
 
         #Grab nova_hub.json from web server.
-        data_json = get_nova_hub_json()
+        data_json = nova_hub_json
 
         display_name = data_json["packs"][modpack_code_name]["names"]["display_name"]
 

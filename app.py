@@ -18,13 +18,15 @@ from tkhtmlview import HTMLLabel
 import emoji
 import psutil
 import math
+import pygame
 
 import settings
 from nova_func import *
 from nova_dir import *
 
 import ctypes
-ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+os.system('color FF')
 
 app_name = settings.app_name
 
@@ -41,6 +43,7 @@ popup_noti_return_value = None
 
 no_connection = False
 current_frame = None
+already_ran_api = None
 
 t12 = None
 
@@ -99,7 +102,7 @@ def nav_bar():
 
     t6=threading.Thread(target=logo_brething_effect, args=([Nova_Logo, Nova_Logo_0, nova_logo_label, actual_width, actual_height]))
     t6.setDaemon(True)
-    t6.start()
+    #t6.start()
 
     buttons_bar = Frame(nav_bar, width=10, height=30, bg="#9F1F0F") #NavBar
     buttons_bar.pack(side="top", fill=BOTH)
@@ -134,6 +137,7 @@ def installations_menu(button_used, previous_frame):
     global progress
     global live_status_text
     global current_frame
+    global already_ran_api
 
     if not button_used == None: #Don't reset buttons if no button was used to get here.
         reset_clickable(settings.button_list)
@@ -150,6 +154,23 @@ def installations_menu(button_used, previous_frame):
     installations_frame.pack(fill=BOTH, expand=1)
 
     current_frame = installations_frame
+
+    #API Refresh Button (WORK IN PROGRESS)
+    '''
+    launch_image = Image.open(settings.path_to_images + "nova_hub_launch_button.png")
+
+    width, height = launch_image.size
+    
+    actual_width = round(int(width)/14)
+    actual_height = round(int(height)/14)
+
+    launch_image = launch_image.resize((actual_width, actual_height))
+    tkimage = ImageTk.PhotoImage(launch_image)
+    launch_button = Button(modpack_frame, text="Launch", image=tkimage, font=("Arial Bold", 16), fg="white", bg="#00B6C0", activebackground="#00B6C0", borderwidth=0, 
+    cursor="hand2")
+    launch_button.config()
+    launch_button.photo = tkimage
+    '''
 
     amount_of_installers = 0
 
@@ -494,7 +515,13 @@ def installations_menu(button_used, previous_frame):
 
     #Drawing modpacks from web server. ---------------------------------
 
-    nova_hub_json = get_nova_hub_json()
+    if already_ran_api == True:
+        nova_hub_json = get_nova_hub_json(save_the_api=True)
+
+    if not already_ran_api == True:
+        nova_hub_json = get_nova_hub_json()
+        already_ran_api = True
+
     if nova_hub_json == False:
         popup_notification("ok", "API ERROR", "We could not connect to the Nova Hub API and we could find any cached files.")
 
@@ -620,7 +647,7 @@ def installations_menu(button_used, previous_frame):
             modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: install_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
         is_modpack_installed = check_modpack.is_installed(None, folder_name)
-        does_modpack_need_update = check_modpack.need_update(None, code_name)
+        does_modpack_need_update = check_modpack.need_update(None, code_name, nova_hub_json)
 
         if is_modpack_installed == True:
             hex_colour = Color("#171717")
@@ -750,12 +777,12 @@ def app_settings_menu(button_used, previous_frame):
     settings_title_label.pack(fill=X, pady=(10, 0))
 
 
-    #Change .minecraft dirctory
+    #Change .minecraft dirctory ------------------------------------------------
     dot_minecraft_dir_frame = Frame(app_settings_frame, width=400, height=80, bg="#171717")
     dot_minecraft_dir_frame.pack(fill=X, padx=20, pady=(30, 0))
 
     dmd_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
-    dmd_text_label = Label(dot_minecraft_dir_frame, text="Change '.minecraft' Directory", font=dmd_text_font, fg="#19F200", bg="#171717")
+    dmd_text_label = Label(dot_minecraft_dir_frame, text="1) Change '.minecraft' Directory", font=dmd_text_font, fg="#19F200", bg="#171717")
     dmd_text_label.pack()
 
     def apply(e): #Edit user settings.json.
@@ -777,7 +804,7 @@ def app_settings_menu(button_used, previous_frame):
         dmd_entry_box.insert(0, path) #Insert path into entry box.
 
     dmd_apply_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
-    dmd_apply_button = Button(dot_minecraft_dir_frame, text="Apply", font=dmd_apply_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    dmd_apply_button = Button(dot_minecraft_dir_frame, text="Apply", font=dmd_apply_button_font, bg="#171717", fg="#12AC00", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2")
     dmd_apply_button.pack(side="right", padx=(5, 250), pady=5)
     dmd_apply_button.config(command=lambda e=dmd_entry_box : apply(e=dmd_entry_box))
@@ -785,7 +812,7 @@ def app_settings_menu(button_used, previous_frame):
     dmd_apply_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
 
     dmd_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
-    dmd_clear_button = Button(dot_minecraft_dir_frame, text="Clear", font=dmd_clear_button_font, bg="#171717", fg="#D46757", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    dmd_clear_button = Button(dot_minecraft_dir_frame, text="Clear", font=dmd_clear_button_font, bg="#171717", fg="#12AC00", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2")
     dmd_clear_button.config(command=lambda first=0, last=END : dmd_entry_box.delete(first=0, last=END))
     dmd_clear_button.pack(side="left", padx=(250, 5), pady=5)
@@ -794,9 +821,81 @@ def app_settings_menu(button_used, previous_frame):
 
 
 
+    #Change mc launcher exe dirctory ------------------------------------------------
+    mc_launcher_exe_frame = Frame(app_settings_frame, width=400, height=80, bg="#171717")
+    mc_launcher_exe_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    mcl_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    mcl_text_label = Label(mc_launcher_exe_frame, text="2) Change minecraft launcher executable\n location.", font=mcl_text_font, fg="#DE7931", bg="#171717")
+    mcl_text_label.pack()
+
+    def mcl_apply(e): #Edit user settings.json.
+        value_in_box = e.get()
+
+        if value_in_box == "":
+            hub_settings.edit(None, "paths", "mc_launcher_exe_path", None)
+
+        else:
+            hub_settings.edit(None, "paths", "mc_launcher_exe_path", value_in_box)
+
+    #Entry Box
+    mcl_entry_box_font = font.Font(family='Arial Rounded MT Bold', size=12, weight='bold', underline=False)
+    mcl_entry_box = Entry(mc_launcher_exe_frame, font=mcl_entry_box_font, bg="#1F1E1E", fg="#AC5D26")
+    mcl_entry_box.pack(fill=X, padx=20, pady=5)
+
+    if not hub_settings.read(None, "paths", ".mc_path") == None: #Fill up string with function that returns json objects from user_settings.json
+        path = hub_settings.read(None, "paths", ".mc_path")
+        dmd_entry_box.insert(0, path) #Insert path into entry box.
+
+    mcl_apply_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    mcl_apply_button = Button(mc_launcher_exe_frame, text="Apply", font=mcl_apply_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    mcl_apply_button.pack(side="right", padx=(5, 250), pady=5)
+    mcl_apply_button.config(command=lambda e=dmd_entry_box : mcl_apply(e=dmd_entry_box))
+    mcl_apply_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#4aff36": button_hover_enter(event, start_colour="#171717", end_colour="#4aff36"))
+    mcl_apply_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
+
+    mcl_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    mcl_clear_button = Button(mc_launcher_exe_frame, text="Clear", font=mcl_clear_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    mcl_clear_button.config(command=lambda first=0, last=END : dmd_entry_box.delete(first=0, last=END))
+    mcl_clear_button.pack(side="left", padx=(250, 5), pady=5)
+    mcl_clear_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#ffffff": button_hover_enter(event, start_colour="#171717", end_colour="#ffffff"))
+    mcl_clear_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#ffffff": button_hover_leave(event, end_colour="#171717", start_colour="#ffffff"))
+
+
     coming_soon_font = font.Font(family='Arial Rounded MT Bold', size=25, weight='bold', underline=False)
     coming_soon_label = Label(app_settings_frame, text="Coming Soon", font=coming_soon_font, fg="white", bg="#171717")
     #coming_soon_label.pack(pady=10)
+
+
+
+    #Open Log ------------------------------------------------
+    open_logs_frame = Frame(app_settings_frame, width=400, height=80, bg="#171717")
+    open_logs_frame.pack(fill=X, padx=20, pady=(30, 0))
+
+    ol_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
+    ol_text_label = Label(open_logs_frame, text="3) Open Logs.", font=ol_text_font, fg="#F1F1F1", bg="#171717")
+    ol_text_label.pack()
+
+    def open_log(txt_name): #Edit user settings.json.
+        pass
+
+    ol_open_current_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    open_current_button = Button(mc_launcher_exe_frame, text="Open Current Log", font=ol_open_current_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    open_current_button.pack(side="right", padx=(5, 250), pady=5)
+    open_current_button.config(command=lambda e=dmd_entry_box : open_log(txt_name=log_file_name))
+    open_current_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#4aff36": button_hover_enter(event, start_colour="#171717", end_colour="#4aff36"))
+    open_current_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
+
+    ol_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    ol_clear_button = Button(mc_launcher_exe_frame, text="Clear", font=ol_clear_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    cursor="hand2")
+    ol_clear_button.config(command=lambda first=0, last=END : dmd_entry_box.delete(first=0, last=END))
+    ol_clear_button.pack(side="left", padx=(250, 5), pady=5)
+    ol_clear_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#ffffff": button_hover_enter(event, start_colour="#171717", end_colour="#ffffff"))
+    ol_clear_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#ffffff": button_hover_leave(event, end_colour="#171717", start_colour="#ffffff"))
 
 def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name):
     if not previous_frame == None:
@@ -1465,8 +1564,6 @@ def color_glow_effect(e, hex_list):
 def play_sound(sound, volume=1.0):
 
     def play_sound_thread():
-        #import pygame
-
         pygame.init()
         pygame.mixer.init()
         sound_ = pygame.mixer.Sound(settings.path_to_assets + sound)

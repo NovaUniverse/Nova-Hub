@@ -14,6 +14,7 @@ import tkinter.font as font
 
 import settings
 import nova_func
+import nova_var_cache
 
 live_installer_status = "Starting..."
 live_installer_progress_bar = 0
@@ -77,9 +78,8 @@ def check_for_update():
     global window
     import settings
 
-    with urllib.request.urlopen(settings.api + settings.nova_hub_json_location) as url:
-        data_json = json.loads(url.read().decode())
-        ver = data_json["current_version"]
+    data_json = nova_func.get_nova_hub_json()
+    ver = data_json["current_version"]
 
     if ver > settings.version: #Work in progress
         #I disabled the live status thread because of main loop error.
