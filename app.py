@@ -25,7 +25,7 @@ from nova_func import *
 from nova_dir import *
 
 import ctypes
-#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 os.system('color FF')
 
 app_name = settings.app_name
@@ -528,7 +528,7 @@ def installations_menu(button_used, previous_frame):
         already_ran_api = True
 
     if nova_hub_json == False:
-        popup_notification("ok", "API ERROR", "We could not connect to the Nova Hub API and we could find any cached files.")
+        popup_notification("ok", "API ERROR", "We could not connect to the Nova Hub API and we could not find any cached files.")
 
     modpack_list = nova_hub_json["packs"]
 
@@ -706,7 +706,7 @@ def installations_menu(button_used, previous_frame):
             update_button.bind("<Leave>", lambda event, modpack_frame=modpack_frame, pack_image_frame=pack_image_frame, 
             modpack_title=modpack_title, version_label=version_label, settings_button=settings_button: update_button_hover_leave(event, modpack_frame, pack_image_frame, modpack_title, version_label, settings_button))
 
-        amount_of_installers =+ 1
+        amount_of_installers +=1
 
     print_and_log()
 
@@ -1388,7 +1388,7 @@ def popup_notification(noti_type, title=None, message=None):
 
                 return_value = popup_noti_json["return_value"]
 
-                time.sleep(0.01)
+                time.sleep(0.001)
 
                 if return_value is True:
                     noti_window.withdraw()
