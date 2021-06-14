@@ -44,6 +44,7 @@ popup_noti_return_value = None
 no_connection = False
 current_frame = None
 already_ran_api = None
+installations_frame = None
 
 t12 = None
 
@@ -156,9 +157,6 @@ def installations_menu(button_used, previous_frame):
     installations_frame.pack(fill=BOTH, expand=1)
 
     current_frame = installations_frame
-
-    def refresh_modpacks():
-        pass
 
     #API Refresh Button (WORK IN PROGRESS)
     refresh_image = Image.open(settings.path_to_images + "refresh.png")
@@ -884,23 +882,24 @@ def app_settings_menu(button_used, previous_frame):
     ol_text_label.pack()
 
     def open_log(txt_name): #Edit user settings.json.
-        pass
+        os.startfile(txt_name)
 
     ol_open_current_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
-    open_current_button = Button(mc_launcher_exe_frame, text="Open Current Log", font=ol_open_current_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    open_current_button = Button(open_logs_frame, text="Open Current Log", font=ol_open_current_button_font, bg="#85ff78", fg="grey", padx=10, pady=3, activebackground="#ffffff", borderwidth=0, 
     cursor="hand2")
     open_current_button.pack(side="right", padx=(5, 250), pady=5)
-    open_current_button.config(command=lambda e=dmd_entry_box : open_log(txt_name=log_file_name))
-    open_current_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#4aff36": button_hover_enter(event, start_colour="#171717", end_colour="#4aff36"))
-    open_current_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#4aff36": button_hover_leave(event, end_colour="#171717", start_colour="#4aff36"))
+    log_file_name = print_and_log()
+    open_current_button.config(command=lambda txt_name=log_file_name : open_log(txt_name=log_file_name))
+    open_current_button.bind("<Enter>", lambda event, start_colour="#85ff78", end_colour="#ffffff": button_hover_enter(event, start_colour="#85ff78", end_colour="#ffffff"))
+    open_current_button.bind("<Leave>", lambda event, end_colour="#85ff78", start_colour="#ffffff": button_hover_leave(event, end_colour="#85ff78", start_colour="#ffffff"))
 
-    ol_clear_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
-    ol_clear_button = Button(mc_launcher_exe_frame, text="Clear", font=ol_clear_button_font, bg="#171717", fg="#AC5D26", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
+    ol_all_logs_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
+    ol_all_logs_button = Button(open_logs_frame, text="All Logs", font=ol_all_logs_button_font, bg="#F04E3A", fg="grey", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2")
-    ol_clear_button.config(command=lambda first=0, last=END : dmd_entry_box.delete(first=0, last=END))
-    ol_clear_button.pack(side="left", padx=(250, 5), pady=5)
-    ol_clear_button.bind("<Enter>", lambda event, start_colour="#171717", end_colour="#ffffff": button_hover_enter(event, start_colour="#171717", end_colour="#ffffff"))
-    ol_clear_button.bind("<Leave>", lambda event, end_colour="#171717", start_colour="#ffffff": button_hover_leave(event, end_colour="#171717", start_colour="#ffffff"))
+    ol_all_logs_button.config(command=lambda txt_name=settings.path_to_logs : open_log(txt_name=settings.path_to_logs))
+    ol_all_logs_button.pack(side="left", padx=(250, 5), pady=5)
+    ol_all_logs_button.bind("<Enter>", lambda event, start_colour="#F04E3A", end_colour="#F0AF39": button_hover_enter(event, start_colour="#F04E3A", end_colour="#F0AF39"))
+    ol_all_logs_button.bind("<Leave>", lambda event, end_colour="#F04E3A", start_colour="#F0AF39": button_hover_leave(event, end_colour="#F04E3A", start_colour="#F0AF39"))
 
 def modpack_settings_menu(previous_frame, pack_name, pack_folder_name, code_name):
     if not previous_frame == None:
@@ -1516,6 +1515,12 @@ def finish(thread_to_wait_for, open_mc_launcher=True):
 
     if not open_mc_launcher == False:
         subprocess.Popen(settings.path_to_mc_launcher_exe, stdout=subprocess.PIPE, creationflags=0x08000000)
+
+def refresh_modpacks():
+    global already_ran_api
+    already_ran_api = False
+
+    installations_menu(None, installations_frame)
 
 def button_hover_enter(e, start_colour=None, end_colour=None):
 
