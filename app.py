@@ -25,7 +25,7 @@ from nova_func import *
 from nova_dir import *
 
 import ctypes
-ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 os.system('color FF')
 
 app_name = settings.app_name
@@ -348,18 +348,20 @@ def installations_menu(button_used, previous_frame):
                 with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
                     json.dump(modpacks_json, f)
 
+                t5.join()
+
                 t9=threading.Thread(target=finish_effect)
                 t9.setDaemon(True)
                 t9.start()
 
-                thread = popup_notification("yes_no", "OptiFine", "Would you like to also install optifine for this modpack?")
-                thread.join()
-
-                if popup_noti_return_value == True: #Install Optifine
-                    download_optifine(code_name, nova_hub_json)
-
             if popup_noti_return_value == False:
                 popup_notification("ok", "Goose Anticheat", "You did not agree with our terms and conditions so you can not install the modpack.")
+
+            thread = popup_notification("yes_no", "OptiFine", "Would you like to also install optifine for this modpack?")
+            thread.join()
+
+            if popup_noti_return_value == True: #Install Optifine
+                download_optifine(code_name, nova_hub_json)
 
         t13=threading.Thread(target=install_thread)
         t13.setDaemon(True)

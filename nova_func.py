@@ -10,8 +10,6 @@ from zipfile import ZipFile
 import shutil
 import traceback
 
-import nova_var_cache
-
 def get_time_and_date(option):
 
     if option.lower() == 'date':
@@ -41,11 +39,9 @@ def get_time_and_date(option):
 log_date_and_time = get_time_and_date("both") #Time run file was ran.
 
 def print_and_log(importance_level=None, text=None):
-    import colorama
-    colorama.init()
     
     if text == None: #Just makes a new line.
-        print ("")
+        print("")
         path_to_log = log("")
         return path_to_log
 
@@ -54,7 +50,7 @@ def print_and_log(importance_level=None, text=None):
             time = get_time_and_date("time")
             context = ("({}) {}".format(time, text))
 
-            print (f"\u001b[37m{context}\u001b[0m")
+            print(f"\u001b[37m{context}\u001b[0m")
             log(context)
             return
 
@@ -62,7 +58,7 @@ def print_and_log(importance_level=None, text=None):
             time = get_time_and_date("time")
             context = ("({}) [INFO] {}".format(time, text))
 
-            print (f"\u001b[36m{context}\u001b[0m") #Clay
+            print(f"\u001b[36m{context}\u001b[0m") #Clay
             log(context)
             return
 
@@ -70,7 +66,7 @@ def print_and_log(importance_level=None, text=None):
             time = get_time_and_date("time")
             context = ("({}) [INFO] {}".format(time, text))
 
-            print (f"\u001b[32m{context}\u001b[0m") #Green
+            print(f"\u001b[32m{context}\u001b[0m") #Green
             log(context)
             return
 
@@ -78,7 +74,7 @@ def print_and_log(importance_level=None, text=None):
             time = get_time_and_date("time")
             context = ("({}) [WARN] {}".format(time, text))
 
-            print (f"\u001b[33m{context}\u001b[0m") #Yellow
+            print(f"\u001b[33m{context}\u001b[0m") #Yellow
             log(context)
             return
 
@@ -86,14 +82,14 @@ def print_and_log(importance_level=None, text=None):
             time = get_time_and_date("time")
             context = ("({}) [ERROR] {}".format(time, text))
 
-            print (f"\u001b[31m{context}\u001b[0m") #Red
+            print(f"\u001b[31m{context}\u001b[0m") #Red
             log(context)
             return
 
         if importance_level.upper() == 'APP_NAME':
             context = (text)
 
-            print (f"\u001b[35m{context}\u001b[0m")
+            print(f"\u001b[35m{context}\u001b[0m")
             log(context)
             return
 
@@ -494,8 +490,6 @@ def get_nova_hub_json(silent=False, save_the_api=None):
             t11=threading.Thread(target=cache_api_stream, args=([nova_hub_json]))
             t11.setDaemon(True)
             t11.start()
-
-            nova_var_cache.already_connect_to_api = True
 
             return nova_hub_json
 

@@ -14,7 +14,6 @@ import tkinter.font as font
 
 import settings
 import nova_func
-import nova_var_cache
 
 live_installer_status = "Starting..."
 live_installer_progress_bar = 0

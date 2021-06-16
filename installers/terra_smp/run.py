@@ -103,13 +103,13 @@ def run(option=None): #This is the main run script that actualy runs the script 
         print_and_log(None, "Downloading Forge...")
 
         destination_path = download_modpack_file(modpack_code_name, "forge.zip")
-        live_installer_progress_bar = 20
+        live_installer_progress_bar = 15
 
         #Extract Forge Zip.
         live_installer_status = "Extracting Forge..."
         print_and_log(None, "Extracting Forge...")
         extract_zip(destination_path + "\\forge.zip")
-        live_installer_progress_bar = 40
+        live_installer_progress_bar = 20
 
         #Find versions folder.
         nova_hub_json = get_nova_hub_json()
@@ -130,36 +130,54 @@ def run(option=None): #This is the main run script that actualy runs the script 
             delete_file(path_to_mc_versions_folder + f"\\{mc_version_name}")
             move_file(forge_dir, path_to_mc_versions_folder)
 
-        live_installer_progress_bar = 58
+        live_installer_progress_bar = 40
         clear_temp_folder() #Deletes all files in temp folder.
-        live_installer_progress_bar = 60
+        
+        #Download terra smp main menu config and resources.
+        live_installer_status = "Downloading Config and Resources..."
+        print_and_log(None, "Downloading Config and Resources...")
+        destination_path = download_modpack_file(modpack_code_name, "modpack_assets.zip")
+        live_installer_progress_bar = 45
+
+        #Extract terra smp main menu config and resources.
+        live_installer_status = "Extracting Config and Resources..."
+        print_and_log(None, "Extracting Config and Resources...")
+        extract_zip(destination_path + "\\modpack_assets.zip")
+        live_installer_progress_bar = 49
+
+        #Move config and resources to game directory.
+        path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+        move_files(destination_path + "\\modpack_assets", path_to_nova_universe_dir + "\\TerraSMP", replace=True)
+
+        live_installer_progress_bar = 52
+        clear_temp_folder()
 
         #Download Mods Zip.
         live_installer_status = "Downloading Mods..."
         print_and_log(None, "Downloading Mods...")
         destination_path = download_modpack_file(modpack_code_name, "mods.zip")
-        live_installer_progress_bar = 62
+        live_installer_progress_bar = 66
 
         #Extract Mods Zip.
         live_installer_status = "Extracting Mods..."
         print_and_log(None, "Extracting Mods...")
         extract_zip(destination_path + "\\mods.zip")
-        live_installer_progress_bar = 64
+        live_installer_progress_bar = 69
 
         #Delete Mods Zip.
         delete_file(destination_path + "\\mods.zip")
-        live_installer_progress_bar = 66
+        live_installer_progress_bar = 70
 
         #Find nova_universe dir
         path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
 
         #Move the mods to TerraSMP appdata folder.
         mods_folder = create_folder(path_to_nova_universe_dir + "\\TerraSMP\\mods")
-        live_installer_progress_bar = 68
+        live_installer_progress_bar = 71
         clear_mods_folder("terra_smp") #Makes sure there are no mods in the folder.
-        live_installer_progress_bar = 70
-        move_files(destination_path + "\\mods", path_to_nova_universe_dir + "\\TerraSMP\\mods", replace=True)
         live_installer_progress_bar = 72
+        move_files(destination_path + "\\mods", path_to_nova_universe_dir + "\\TerraSMP\\mods", replace=True)
+        live_installer_progress_bar = 73
 
         #Clear temp
         clear_temp_folder()
@@ -219,9 +237,15 @@ def run(option=None): #This is the main run script that actualy runs the script 
             clear_temp_folder()
             live_installer_progress_bar = 5
 
+            #Download terra smp main menu config and resources.
+            live_installer_status = "Downloading Config and Resources..."
+            print_and_log(None, "Downloading Config and Resources...")
+            download_modpack_file(modpack_code_name, "modpack_assets.zip")
+            live_installer_progress_bar = 7
+
             live_installer_status = "Downloading forge.zip..."
             download_modpack_file("terra_smp", "forge.zip")
-            live_installer_progress_bar = 10
+            live_installer_progress_bar = 11
 
             live_installer_status = "Downloading mods.zip..."
             download_modpack_file("terra_smp", "mods.zip")
@@ -235,6 +259,24 @@ def run(option=None): #This is the main run script that actualy runs the script 
                 extract_zip(destination_path + f"\\{file}")
 
             live_installer_progress_bar = 40
+
+
+            live_installer_progress_bar = 45
+
+            #Extract terra smp main menu config and resources.
+            live_installer_status = "Extracting Config and Resources..."
+            print_and_log(None, "Extracting Config and Resources...")
+            extract_zip(destination_path + "\\modpack_assets.zip")
+            live_installer_progress_bar = 49
+
+            #Move config and resources to game directory.
+            path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()
+            move_files(destination_path + "\\modpack_assets", path_to_nova_universe_dir + "\\TerraSMP", replace=True)
+
+            delete_file(destination_path + "\\modpack_assets.zip")
+
+            live_installer_progress_bar = 52
+            clear_temp_folder()
 
             live_installer_progress_bar = 42
 
