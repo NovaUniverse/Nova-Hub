@@ -5,11 +5,29 @@ development_stage = "DEV"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
 #Be careful when changing the locations. If you type a false location the auto updater will stop functioning.
-#ip = "https://novauniverse.net/"
-#api = ip + "cdn/nova_hub"
+option = None
+api_mode = "prod"
+try:
+    import sys
+    option = sys.argv[1] #Grab command line arg
+except IndexError as e:
+    pass
 
-ip = "http://192.168.1.176/"
-api = ip + "files/nova_hub"
+if not option == None:
+    if option.lower() == "dev":
+        api_mode = "dev"
+        print("DEV MODE HURRAY!!!")
+
+if api_mode == "dev":
+    ip = "https://nhcdn.novauniverse.net/"
+    api = ip + "dev/nova_hub"
+
+if api_mode == "prod":
+    ip = "https://nhcdn.novauniverse.net/"
+    api = ip + "prod/nova_hub"
+
+#ip = "http://192.168.1.176/"
+#api = ip + "files/nova_hub"
 
 nova_hub_json_location = "/nova_hub.json" #Where the json file is stored on the webserver.
 nova_hub_update_package_location = "/update.zip" #Where the update package is stored on the webserver.

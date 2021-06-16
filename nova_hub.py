@@ -52,8 +52,8 @@ def create_status_bar(frame):
     global live_status_text
 
     #Progress Bar
-    live_status_text.config(anchor=CENTER)
-    live_status_text.place(x=418, y=75)
+    #live_status_text.config(anchor=CENTER)
+    #live_status_text.place(x=418, y=75)
 
     s = ttk.Style() #Applys Theme
     s.theme_use('clam')
@@ -69,7 +69,7 @@ def status_bar_thread():
     staus_bar = True
 
     while staus_bar == True:
-        live_status_text.config(text=live_status_string)
+        #live_status_text.config(text=live_status_string)
 
         time.sleep(0.006)
 
@@ -84,7 +84,7 @@ def check_for_update():
     if ver > settings.version: #Work in progress
         #I disabled the live status thread because of main loop error.
 
-        version_text.config(text="V" + str(settings.version) + " --> V" + str(ver))
+        #version_text.config(text="V" + str(settings.version) + " --> V" + str(ver))
         
         '''
         t12 = threading.Thread(target=live_run_status, args=([main_frame]))
@@ -92,7 +92,7 @@ def check_for_update():
         t12.start()
         '''
 
-        create_status_bar(main_frame)
+        #create_status_bar(main_frame)
 
         del settings #Unload settings.
 
@@ -119,7 +119,7 @@ def update_app(mode):
         #Run Updater
         try:
             import subprocess
-            subprocess.call("update.exe")
+            subprocess.call(".\\update.exe")
             exit
             sys.exit()
 
@@ -251,6 +251,15 @@ def start_up_thread():
     t3.start()
 
 if __name__ == '__main__':
+    option = None
+    try:
+        option = sys.argv[1]
+        nova_func.print_and_log("info_2", f":) We got your command line argument. >>> {option}")
+
+    except IndexError as e:
+        nova_func.print_and_log("WARN", "Couldn't grab command line argument, if you didn't pass an argument ignore this.")
+        nova_func.print_and_log()
+    
     t2 = threading.Thread(target=start_up_thread)
     t2.start()
 
