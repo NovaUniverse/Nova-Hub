@@ -251,7 +251,7 @@ version_text = Label(main_frame, text="test", font=version_text_font, fg="#C5261
 version_text.place(x=628, y=166)
 
 window.title("NOVA HUB INSTALLER")
-window.geometry('300x200')
+window.geometry('350x200')
 window.resizable(False, False) #Makes window not resizeable
 
 if __name__ == '__main__':
@@ -259,6 +259,7 @@ if __name__ == '__main__':
     option = None
     try:
         option = sys.argv[1]
+        print_and_log("info_2", f":) We got your command line argument. >>> {option}")
 
     except IndexError as e:
         print_and_log("WARN", "Couldn't grab command line argument, if you didn't pass an argument ignore this.")

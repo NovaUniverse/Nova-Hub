@@ -9,7 +9,7 @@ option = None
 api_mode = "prod"
 try:
     import sys
-    option = sys.argv[1] #Grab command line arg
+    option = sys.argv[2] #Grab command line arg
 except IndexError as e:
     pass
 
