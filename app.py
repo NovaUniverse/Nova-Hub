@@ -25,7 +25,7 @@ from nova_func import *
 from nova_dir import *
 
 import ctypes
-#ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 os.system('color FF')
 
 app_name = settings.app_name
@@ -680,6 +680,9 @@ def installations_menu(button_used, previous_frame):
                 t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
                 t8.setDaemon(True)
                 t8.start()
+
+            if is_script_downloaded == False:
+                download_modpack_script(code_name, nova_hub_json)
 
         #Update checking
         if does_modpack_need_update == True:

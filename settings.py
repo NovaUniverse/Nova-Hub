@@ -17,6 +17,8 @@ if not option == None:
     if option.lower() == "dev":
         api_mode = "dev"
         print("DEV MODE HURRAY!!!")
+        import ctypes
+        ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 3)
 
 if api_mode == "dev":
     ip = "https://nhcdn.novauniverse.net/"
