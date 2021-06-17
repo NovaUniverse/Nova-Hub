@@ -258,16 +258,7 @@ def run(option=None): #This is the main run script that actualy runs the script 
             for file in check_dir(destination_path): #Extract all zips in temp folder.
                 extract_zip(destination_path + f"\\{file}")
 
-            live_installer_progress_bar = 40
-
-
-            live_installer_progress_bar = 45
-
-            #Extract terra smp main menu config and resources.
-            live_installer_status = "Extracting Config and Resources..."
-            print_and_log(None, "Extracting Config and Resources...")
-            extract_zip(destination_path + "\\modpack_assets.zip")
-            live_installer_progress_bar = 49
+            live_installer_progress_bar = 48
 
             #Move config and resources to game directory.
             path_to_nova_universe_dir = Nova_Dir.get_nova_universe_directory()

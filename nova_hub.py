@@ -132,15 +132,29 @@ def check_nova_hub_appdata_folder():
     #Find the nova_universe directory.
     import nova_dir
     from nova_dir import Nova_Dir
-    path = Nova_Dir.get_nova_universe_directory()
+    
     del nova_dir
 
+    path = Nova_Dir.get_appdata_directory()
+    if not ".NovaUniverse" in nova_func.check_dir(path):
+        #Create .NovaUniverse folder.
+        nova_func.create_folder(os.getenv('APPDATA') + "\\.NovaUniverse")
+
+    path = Nova_Dir.get_nova_universe_directory()
     if not "#.nova_hub" in nova_func.check_dir(path):
         #Create #.nova_hub folder.
         nova_func.create_nova_hub_appdata_folder()
 
+        req = urllib.request.Request(
+                settings.api + settings.user_settings_json_template_location, 
+                data=None, 
+                headers={
+                    'User-Agent': str(settings.app_name)
+                }
+            )
+
         #Download user_settings.json template from webserver.
-        with urllib.request.urlopen(settings.api + settings.user_settings_json_template_location) as url:
+        with urllib.request.urlopen(req) as url:
             template_json = json.loads(url.read().decode())
 
         #Create user_settings.json
@@ -181,6 +195,11 @@ def check_nova_hub_appdata_folder():
     if not "installers" in nova_func.check_dir("."):
         #Create installers folder.
         nova_func.create_folder(".\\installers")
+
+    #Create temp folder if not avalible.
+    if not "temp" in nova_func.check_dir("."):
+        #Create installers folder.
+        nova_func.create_folder(".\\temp")
 
     #Create popup_noti_cache.json if not avalible.
     if not "popup_noti_cache.json" in nova_func.check_dir("."):
@@ -262,8 +281,8 @@ if __name__ == '__main__':
     t2 = threading.Thread(target=start_up_thread)
     t2.start()
 
-    import nova_dir
     from nova_func import print_and_log
+    import nova_dir
 
     if nova_dir.Nova_Dir.is_supported() == None: #If app is supported by OS.
         update_image_label.pack_forget()

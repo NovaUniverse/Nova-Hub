@@ -317,10 +317,11 @@ def check_dir(path_to_dir):
 
 def create_nova_hub_appdata_folder():
     import settings
+    from nova_dir import Nova_Dir
 
     try:
         #Create .NovaUniverse
-        path = f"{settings.appdata_dir}\\.NovaUniverse"
+        path = f"{Nova_Dir.get_appdata_directory()}\\.NovaUniverse"
         create_folder(path)
 
         #Create #.nova_hub

@@ -1,9 +1,20 @@
 import os
 import sys
 import json
-from nova_func import print_and_log
+from nova_func import print_and_log, check_dir, create_folder
 
 class Nova_Dir:
+	@staticmethod
+	def get_appdata_directory():
+		platform = sys.platform 
+
+		if platform == "win32":
+			return os.getenv('APPDATA')
+		elif platform == "linux":
+			return os.getenv("HOME")
+		else:
+			return None
+			
 	@staticmethod
 	def get_terra_smp_directory():
 		platform = sys.platform 
@@ -23,17 +34,6 @@ class Nova_Dir:
 			return os.getenv('APPDATA') + "\\.NovaUniverse"
 		elif platform == "linux":
 			return os.getenv("HOME") + "/.NovaUniverse"
-		else:
-			return None
-
-	@staticmethod
-	def get_appdata_directory():
-		platform = sys.platform 
-
-		if platform == "win32":
-			return os.getenv('APPDATA')
-		elif platform == "linux":
-			return os.getenv("HOME")
 		else:
 			return None
 

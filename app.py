@@ -337,6 +337,8 @@ def installations_menu(button_used, previous_frame):
                 t5.setDaemon(True)
                 t5.start()
 
+                t5.join()
+
                 #Add installed mod pack to modpacks.json
                 path = Nova_Dir.get_nova_universe_directory()
                 with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
@@ -347,8 +349,6 @@ def installations_menu(button_used, previous_frame):
 
                 with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
                     json.dump(modpacks_json, f)
-
-                t5.join()
 
                 t9=threading.Thread(target=finish_effect)
                 t9.setDaemon(True)
@@ -402,74 +402,96 @@ def installations_menu(button_used, previous_frame):
             t8.join()
             launch_button.place(x=64, y=210)
 
-        #Update Effect
-        hex_colour = Color("#C06565")
-        colours = list(hex_colour.range_to(Color("#00C03E"), 20))
+        def update_thread():
+            #Update Effect
+            hex_colour = Color("#C06565")
+            colours = list(hex_colour.range_to(Color("#00C03E"), 20))
 
-        hex_colour = Color("#C52612") #Text
-        colours_text = list(hex_colour.range_to(Color("black"), 12))
+            hex_colour = Color("#C52612") #Text
+            colours_text = list(hex_colour.range_to(Color("black"), 12))
 
-        #Delete old install script and download new one.
-        delete_file(settings.path_to_installers + f"\\{code_name}")
+            #Delete old install script and download new one.
+            delete_file(settings.path_to_installers + f"\\{code_name}")
 
-        path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
-        destination_path = download_modpack_file(code_name, path_to_script)
+            path_to_script = nova_hub_json["packs"][code_name]["files"]["script"]
+            destination_path = download_modpack_file(code_name, path_to_script)
 
-        extract_zip(destination_path + "\\script.zip")
+            extract_zip(destination_path + "\\script.zip")
 
-        create_folder(settings.path_to_installers + f"\\{code_name}")
+            create_folder(settings.path_to_installers + f"\\{code_name}")
 
-        move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
+            move_files(destination_path + "\\script", settings.path_to_installers + f"\\{code_name}")
 
-        clear_temp_folder()
+            clear_temp_folder()
 
-        
-        #Threads needed for update.
-        t3=threading.Thread(target=run.run, args=(["UPDATE"])) #Run Installer thread.
-        t3.setDaemon(True)
-        t3.start()
+            #Reinporting script.
+            try:
+                print_and_log(None, f"Importing {display_name} Script...")
+                run = importlib.import_module(f"installers.{mod_pack}.run")
 
-        t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
-        t2.setDaemon(True)
-        t2.start()
+            except Exception as e:
+                print_and_log("error", e)
 
-        time.sleep(0.1)
+            #Threads needed for update.
+            try:
+                t3=threading.Thread(target=run.run, args=(["UPDATE"])) #Run Installer thread.
+                t3.setDaemon(True)
+                t3.start()
 
-        t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, update_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
-        t8.setDaemon(True)
-        t8.start()
+                update_comfirmation = None
 
-        #Update mc launcher profile for mod pack.
-        from datetime import datetime
-        todays_date = datetime.now().isoformat() #Getting current date.
+            except Exception as e:
+                popup_notification("ok", "SCRIPT ERROR!", f"An error occured in the {display_name} script while updating, so we rolled back this update.")
+                update_comfirmation = False
 
-        profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
-        ver = nova_hub_json["packs"][code_name]["ver"]
-        folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
-        block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
-        mc_version = nova_hub_json["packs"][code_name]["mc_version"]
-        default_java_args = nova_hub_json["packs"][code_name]["java_args"]
+            t2=threading.Thread(target=live_run_status, args=([run, modpack_frame])) #Live Run Stats
+            t2.setDaemon(True)
+            t2.start()
 
-        mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+            time.sleep(0.1)
 
-        t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
-        t5.setDaemon(True)
-        t5.start()
+            t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, update_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
+            t8.setDaemon(True)
+            t8.start()
 
-        #Update mod pack version in modpacks.json
-        path = Nova_Dir.get_nova_universe_directory()
-        with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
-            modpacks_json = json.load(f)
+            #Update mc launcher profile for mod pack.
+            from datetime import datetime
+            todays_date = datetime.now().isoformat() #Getting current date.
 
-        modpacks_json[code_name] = {}
-        modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+            profile_name = nova_hub_json["packs"][code_name]["names"]["profile_name"]
+            ver = nova_hub_json["packs"][code_name]["ver"]
+            folder_name = nova_hub_json["packs"][code_name]["names"]["folder_name"]
+            block_icon = nova_hub_json["packs"][code_name]["profile_block_icon"]
+            mc_version = nova_hub_json["packs"][code_name]["mc_version"]
+            default_java_args = nova_hub_json["packs"][code_name]["java_args"]
 
-        with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
-            json.dump(modpacks_json, f)
+            mc_launcher.create_profile(None, code_name, profile_name + f" - v{ver}", folder_name, todays_date, block_icon=block_icon, mc_version_name=mc_version, java_args=default_java_args) #Creating profile
+            
+            t5=threading.Thread(target=finish, args=([t3])) #Finish Install thread
+            t5.setDaemon(True)
+            t5.start()
 
-        t9=threading.Thread(target=finish_effect)
-        t9.setDaemon(True)
-        t9.start()
+            t5.join()
+            
+            if not update_comfirmation == False:
+                #Update mod pack version in modpacks.json
+                path = Nova_Dir.get_nova_universe_directory()
+                with open(path + "\\#.nova_hub\\mod_packs.json", "r") as f: #Read
+                    modpacks_json = json.load(f)
+
+                modpacks_json[code_name] = {}
+                modpacks_json[code_name]["ver"] = nova_hub_json["packs"][code_name]["ver"]
+
+                with open(path + "\\#.nova_hub\\mod_packs.json", "w") as f: #Write
+                    json.dump(modpacks_json, f)
+
+                t9=threading.Thread(target=finish_effect)
+                t9.setDaemon(True)
+                t9.start()
+
+        t14=threading.Thread(target=update_thread)
+        t14.setDaemon(True)
+        t14.start()
 
     def download_modpack_script(code_name, nova_hub_json):
         global t12
@@ -626,6 +648,7 @@ def installations_menu(button_used, previous_frame):
             except Exception as e:
                 print_and_log("error", e)
                 delete_file(settings.path_to_installers + f"\\{mod_pack}")
+                download_modpack_script(code_name, nova_hub_json)
 
                 is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
 
@@ -681,6 +704,7 @@ def installations_menu(button_used, previous_frame):
                 t8.setDaemon(True)
                 t8.start()
 
+            is_script_downloaded = check_modpack.is_script_downloaded(None, code_name)
             if is_script_downloaded == False:
                 download_modpack_script(code_name, nova_hub_json)
 

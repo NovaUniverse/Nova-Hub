@@ -1,7 +1,7 @@
 import os
 
-version = 1.00
-development_stage = "DEV"
+version = 1.01
+development_stage = "ALPHA"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
 #Be careful when changing the locations. If you type a false location the auto updater will stop functioning.
