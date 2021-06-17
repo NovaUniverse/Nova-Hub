@@ -764,6 +764,7 @@ Nova Hub is an app that players can use to rapidly install Mod Packs for game mo
 
 Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future.
 
+NOTICE: Nova Hub is only compatible with Minecraft Launcher, if you do not have MC Launcher installed Nova Hub will fail to function properly.
     """
 
     #Welcome popup.
@@ -800,12 +801,12 @@ def app_settings_menu(button_used, previous_frame):
     if not previous_frame == None:
         previous_frame.pack_forget()
 
-    app_settings_frame = Frame(main_frame, width=1280, height=720, bg="#171717")
+    app_settings_frame = Frame(main_frame, width=1280, height=720, bg="#1F1E1E")
     app_settings_frame.pack(fill=BOTH, expand=1)
     current_frame = app_settings_frame #Tells nav bar that this is the current frame being viewed.
 
     settings_title_font = font.Font(family='Arial Rounded MT Bold', size=30, weight='bold', underline=True)
-    settings_title_label = Label(app_settings_frame, text="Nova Hub Settings", font=settings_title_font, fg="#C52612", bg="#171717", cursor="hand2")
+    settings_title_label = Label(app_settings_frame, text="Nova Hub Settings", font=settings_title_font, fg="#C52612", bg="#1F1E1E", cursor="hand2")
     settings_title_label.pack(fill=X, pady=(10, 0))
 
 
@@ -815,7 +816,7 @@ def app_settings_menu(button_used, previous_frame):
 
     dmd_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
     dmd_text_label = Label(dot_minecraft_dir_frame, text="1) Change '.minecraft' Directory", font=dmd_text_font, fg="#19F200", bg="#171717")
-    dmd_text_label.pack()
+    dmd_text_label.pack(pady=(5, 0))
 
     def apply(e): #Edit user settings.json.
         value_in_box = e.get()
@@ -859,7 +860,7 @@ def app_settings_menu(button_used, previous_frame):
 
     mcl_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
     mcl_text_label = Label(mc_launcher_exe_frame, text="2) Change minecraft launcher executable\n location.", font=mcl_text_font, fg="#DE7931", bg="#171717")
-    mcl_text_label.pack()
+    mcl_text_label.pack(pady=(5, 0))
 
     def mcl_apply(e): #Edit user settings.json.
         value_in_box = e.get()
@@ -908,7 +909,7 @@ def app_settings_menu(button_used, previous_frame):
 
     ol_text_font = font.Font(family='Arial Rounded MT Bold', size=15, weight='bold', underline=False)
     ol_text_label = Label(open_logs_frame, text="3) Open Logs.", font=ol_text_font, fg="#F1F1F1", bg="#171717")
-    ol_text_label.pack()
+    ol_text_label.pack(pady=(5, 10))
 
     def open_log(txt_name): #Edit user settings.json.
         os.startfile(txt_name)
@@ -916,7 +917,7 @@ def app_settings_menu(button_used, previous_frame):
     ol_open_current_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
     open_current_button = Button(open_logs_frame, text="Open Current Log", font=ol_open_current_button_font, bg="#85ff78", fg="grey", padx=10, pady=3, activebackground="#ffffff", borderwidth=0, 
     cursor="hand2")
-    open_current_button.pack(side="right", padx=(5, 250), pady=5)
+    open_current_button.pack(side="right", padx=(5, 250), pady=(5, 15))
     log_file_name = print_and_log()
     open_current_button.config(command=lambda txt_name=log_file_name : open_log(txt_name=log_file_name))
     open_current_button.bind("<Enter>", lambda event, start_colour="#85ff78", end_colour="#ffffff": button_hover_enter(event, start_colour="#85ff78", end_colour="#ffffff"))
@@ -926,7 +927,7 @@ def app_settings_menu(button_used, previous_frame):
     ol_all_logs_button = Button(open_logs_frame, text="All Logs", font=ol_all_logs_button_font, bg="#F04E3A", fg="grey", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2")
     ol_all_logs_button.config(command=lambda txt_name=settings.path_to_logs : open_log(txt_name=settings.path_to_logs))
-    ol_all_logs_button.pack(side="left", padx=(250, 5), pady=5)
+    ol_all_logs_button.pack(side="left", padx=(250, 5), pady=(5, 15))
     ol_all_logs_button.bind("<Enter>", lambda event, start_colour="#F04E3A", end_colour="#F0AF39": button_hover_enter(event, start_colour="#F04E3A", end_colour="#F0AF39"))
     ol_all_logs_button.bind("<Leave>", lambda event, end_colour="#F04E3A", start_colour="#F0AF39": button_hover_leave(event, end_colour="#F04E3A", start_colour="#F0AF39"))
 
