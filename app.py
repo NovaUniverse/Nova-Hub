@@ -4,7 +4,8 @@ from tkinter import ttk
 #from ttkthemes import themed_tk as tk
 from tkinter.ttk import Progressbar
 from PIL import ImageTk, Image, ImageFilter
-import tkinter.font as font
+#import tkinter.font as font
+from tkinter import font
 import threading
 import time
 import subprocess
@@ -24,8 +25,11 @@ import settings
 from nova_func import *
 from nova_dir import *
 
-import ctypes
-ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+if not settings.option == None:
+    if not option.lower() == "dev":
+        import ctypes
+        ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+
 os.system('color FF')
 
 app_name = settings.app_name
@@ -917,7 +921,7 @@ def app_settings_menu(button_used, previous_frame):
     ol_open_current_button_font = font.Font(family='Arial Rounded MT Bold', size=11, weight='bold', underline=False)
     open_current_button = Button(open_logs_frame, text="Open Current Log", font=ol_open_current_button_font, bg="#85ff78", fg="grey", padx=10, pady=3, activebackground="#ffffff", borderwidth=0, 
     cursor="hand2")
-    open_current_button.pack(side="right", padx=(5, 250), pady=(5, 15))
+    open_current_button.pack(side="right", padx=(5, 250), pady=(5, 12))
     log_file_name = print_and_log()
     open_current_button.config(command=lambda txt_name=log_file_name : open_log(txt_name=log_file_name))
     open_current_button.bind("<Enter>", lambda event, start_colour="#85ff78", end_colour="#ffffff": button_hover_enter(event, start_colour="#85ff78", end_colour="#ffffff"))
@@ -927,7 +931,7 @@ def app_settings_menu(button_used, previous_frame):
     ol_all_logs_button = Button(open_logs_frame, text="All Logs", font=ol_all_logs_button_font, bg="#F04E3A", fg="grey", padx=10, pady=3, activebackground="#FEBCBC", borderwidth=0, 
     cursor="hand2")
     ol_all_logs_button.config(command=lambda txt_name=settings.path_to_logs : open_log(txt_name=settings.path_to_logs))
-    ol_all_logs_button.pack(side="left", padx=(250, 5), pady=(5, 15))
+    ol_all_logs_button.pack(side="left", padx=(250, 5), pady=(5, 12))
     ol_all_logs_button.bind("<Enter>", lambda event, start_colour="#F04E3A", end_colour="#F0AF39": button_hover_enter(event, start_colour="#F04E3A", end_colour="#F0AF39"))
     ol_all_logs_button.bind("<Leave>", lambda event, end_colour="#F04E3A", start_colour="#F0AF39": button_hover_leave(event, end_colour="#F04E3A", start_colour="#F0AF39"))
 

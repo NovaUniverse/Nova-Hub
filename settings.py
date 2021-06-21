@@ -1,6 +1,6 @@
 import os
 
-version = 1.02
+version = 1.03
 development_stage = "ALPHA"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
@@ -17,6 +17,7 @@ if not option == None:
     if option.lower() == "dev":
         api_mode = "dev"
         print("DEV MODE HURRAY!!!")
+
         import ctypes
         ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 3)
 

@@ -18,6 +18,9 @@ import nova_func
 live_installer_status = "Starting..."
 live_installer_progress_bar = 0
 
+import ctypes
+ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
+
 t3 = None
 live_status_string = ""
 
@@ -177,6 +180,14 @@ def check_nova_hub_appdata_folder():
         nova_func.delete_file(".\\assets.zip")
         
         nova_func.clear_temp_folder()
+
+    #Install Font/Add Font.
+    from fontTools.ttLib import TTFont
+    font = TTFont(f"{settings.path_to_assets}font.ttf")
+    font.save(f"{settings.path_to_assets}font.ttf")
+
+    import pyglet
+    pyglet.font.add_file(f"{settings.path_to_assets}font.ttf")
 
     #Download updater script if not avalible
     if not "update.exe" in nova_func.check_dir("."):
