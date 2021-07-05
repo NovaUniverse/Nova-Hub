@@ -1,6 +1,6 @@
 import os
 
-version = 1.03
+version = 1.04
 development_stage = "ALPHA"
 app_name = "NOVA HUB V{} ({})".format(version, development_stage)
 
@@ -36,6 +36,7 @@ nova_hub_json_location = "/nova_hub.json" #Where the json file is stored on the 
 nova_hub_update_package_location = "/update.zip" #Where the update package is stored on the webserver.
 mod_pack_installers_location = "/installers" #Web directory where the modpack installers will be located.
 nova_hub_modpack_location = "/mod_packs"
+nova_hub_web_assets_location = "/web_assets"
 user_settings_json_template_location = "/user_settings_template.json"
 updater_script_location = "/updater_script.zip"
 

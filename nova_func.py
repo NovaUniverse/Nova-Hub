@@ -309,6 +309,32 @@ def download_file(url, download_path, text_label=None):
             text_label.config(text=e)
         return False
 
+def stream_file(url):
+    import settings
+
+    print_and_log(None, "Streaming file...")
+
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            url, 
+            data=None, 
+            headers={
+                'User-Agent': str(settings.app_name)
+            }
+        )
+
+        url_response = urllib.request.urlopen(req)
+        streaming_file = url_response.read()
+
+        return streaming_file
+
+    except Exception as e:
+        print_and_log("error", "Failed to stream file.")
+        print_and_log(None, traceback.print_exc())
+
+        return False
+
     del settings
 
 def check_dir(path_to_dir):

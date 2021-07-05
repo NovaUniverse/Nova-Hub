@@ -16,6 +16,12 @@ import pythoncom
 import ctypes
 ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 
+import pyglet
+url = settings.api + f"{settings.nova_hub_web_assets_location}/font.ttf"
+font_file = stream_file(url)
+if not font_file == False:
+    pyglet.font.add_file(font_file)
+
 popup_noti_return_value = None
 
 def popup_notification(noti_type, title=None, message=None):
@@ -165,11 +171,15 @@ def run(option=None):
 
             thread = popup_notification("ok", "Nova Hub Installed", "Nova Hub has been successfully installed. RUN the Nova Hub shortcut on your desktop to start the app. \n:)")
             thread.join()
+            
+            wait_text.config(text="App Installed", fg="green")
 
             window.destroy()
             sys.exit()
 
         except Exception as e:
+            wait_text.config(text="Unexpected Error", fg="red")
+
             thread = popup_notification("ok", "Installer Unexpected Error", f"In the installer has errored but don't worry they should be a logs folder somewhere so you can report the issue with a log. \n \n {e}")
             thread.join()
 
@@ -184,6 +194,7 @@ def install_run():
     t1.start()
 
     install_button.config(state="disabled")
+    wait_text.config(text="Wait, Install in Progress...")
 
 def button_hover_enter(e, start_colour=None, end_colour=None):
 
@@ -237,13 +248,14 @@ nova_hub_text = Label(main_frame, text="Nova Hub", font=nova_hub_font, fg="#F04E
 install_button_font = font.Font(family='Arial Rounded MT Bold', size=30, weight='bold', underline=False)
 install_button = Button(main_frame, text="Install!", font=install_button_font, padx=10, pady=5, fg="white", bg="#EA0808", activebackground="#F05A17", borderwidth=0, 
 cursor="hand2", command=install_run)
-install_button.pack(pady=(70, 70))
+install_button.pack(pady=(58, 0))
 install_button.bind("<Enter>", lambda event, start_colour="#EA0808", end_colour="#F05A17": button_hover_enter(event, start_colour="#EA0808", end_colour="#F05A17"))
 install_button.bind("<Leave>", lambda event, end_colour="#EA0808", start_colour="#F05A17": button_hover_leave(event, end_colour="#EA0808", start_colour="#F05A17"))
 
-#Live Status
-live_status_text = Label(main_frame, text="", font=("Arial Rounded MT Bold", 18), fg="#E1D8D8", 
-pady=12, bg="#171717", wraplength=780)
+#Wait
+wait_text = Label(main_frame, text="", font=("Arial Rounded MT Bold", 12), fg="white", 
+pady=12, bg="#171717")
+wait_text.pack(pady=(3, 0))
 
 #Version Text
 version_text_font = font.Font(family='Arial Rounded MT Bold', size=18, weight='bold', underline=False)
