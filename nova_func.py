@@ -436,6 +436,9 @@ def download_optifine(modpack_code_name, nova_hub_json):
     del settings
     del nova_dir
 
+def migrate_settings(modpack_code_name, nova_hub_json):
+    pass
+
 def get_nova_hub_json(silent=False, save_the_api=None):
     import settings
 

@@ -162,7 +162,7 @@ def installations_menu(button_used, previous_frame):
 
     current_frame = installations_frame
 
-    #API Refresh Button (WORK IN PROGRESS)
+    #API Refresh Button
     refresh_image = Image.open(settings.path_to_images + "refresh.png")
 
     width, height = refresh_image.size
@@ -323,6 +323,17 @@ def installations_menu(button_used, previous_frame):
                 t8=threading.Thread(target=modpack_glow_effect, args=([modpack_frame, installs_button, pack_image_frame, modpack_title, version_label, settings_button, colours, colours_text]))
                 t8.setDaemon(True)
                 t8.start()
+
+                #Check if this is terra smp and if old terra smp is already installed.
+                if code_name == "terra_smp":
+                    for folder in check_dir(Nova_Dir.get_mc_game_directory()):
+                        folder = folder.lower()
+                        if folder == "terrasmp":
+                            thread = popup_notification("yes_no", f"Transfer Controls and Settings from old {display_name}?", f"We have detected that you have the old {display_name}, would you like to transfer all the controls and settings from it over to the NEW {display_name}. Notice: Make sure to launch the new {display_name} from now on.")
+                            thread.join()
+                    
+                    if popup_noti_return_value == True:
+                        pass
 
                 #Create mc launcher profile for mod pack.
                 from datetime import datetime
@@ -1421,7 +1432,7 @@ def popup_notification(noti_type, title=None, message=None):
 
                 return_value = popup_noti_json["return_value"]
 
-                time.sleep(0.001)
+                time.sleep(0.00000000000001)
 
                 if return_value is True:
                     noti_window.withdraw()
