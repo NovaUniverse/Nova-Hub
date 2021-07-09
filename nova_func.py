@@ -6,6 +6,7 @@ import urllib.request
 import requests
 import stat
 import subprocess
+import zipfile
 from zipfile import ZipFile
 import shutil
 import traceback
@@ -164,21 +165,26 @@ def create_folder(path):
 def extract_zip(path_to_zip, text_label=None):
     import settings
     try:
-        with ZipFile(path_to_zip, 'r') as zip:
-            if not text_label == None:
-                text_label.config(text=f"Excracting {path_to_zip}...")
-    
-            print_and_log()
-            zip.printdir()
-            print_and_log()
-            zip.extractall(settings.temp_folder_path)
-            print_and_log(None, "[Done]")
-            if not text_label == None:
-                text_label.config(text="[DONE]")
+        if zipfile.is_zipfile(path_to_zip) == True:
+            with ZipFile(path_to_zip, 'r') as zip:
+                if not text_label == None:
+                    text_label.config(text=f"Excracting {path_to_zip}...")
+        
+                print_and_log()
+                zip.printdir()
+                print_and_log()
+                zip.extractall(settings.temp_folder_path)
+                print_and_log(None, "[Done]")
+                if not text_label == None:
+                    text_label.config(text="[DONE]")
 
-            print_and_log()
-            zip.close()
-        return True
+                print_and_log()
+                zip.close()
+            return True
+
+        else:
+            print_and_log("warn", "We think the file is not a zip. This may be the wrong file or the file does not exist. We're skiping this file.")
+            return None
 
     except OSError as e:
         print_and_log("ERROR", e)
@@ -435,9 +441,12 @@ def get_size(bytes, suffix="B"):
 
 def download_modpack_file(modpack_code_name, file_name):
     import settings
-    download_file(settings.api + settings.nova_hub_modpack_location + f"/{modpack_code_name}/{file_name}", f"temp\\{file_name}")
+    returned_value = download_file(settings.api + settings.nova_hub_modpack_location + f"/{modpack_code_name}/{file_name}", f"temp\\{file_name}")
 
-    return "temp"
+    if returned_value == False:
+        return False
+    else:
+        return "temp"
 
 def download_optifine(modpack_code_name, nova_hub_json):
     import settings
@@ -484,10 +493,12 @@ def get_nova_hub_json(silent=False, save_the_api=None):
 
             #Download modpack banner.
             name_of_banner = nova_hub_json["packs"][modpack]["nova_hub_banner"]
-            destination_path = download_modpack_file(modpack, name_of_banner)
+            if not name_of_banner == "":
+                destination_path = download_modpack_file(modpack, name_of_banner)
 
             #Move banner to cache folder.
-            move_file(destination_path + f"\\{name_of_banner}", path_to_modpack_folder, file_name=name_of_banner, replace=True)
+            if not name_of_banner == "":
+                move_file(destination_path + f"\\{name_of_banner}", path_to_modpack_folder, file_name=name_of_banner, replace=True)
 
         #Cache json.
         with open(cache_folder + "\\nova_hub.json", "w") as f: #Write
