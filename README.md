@@ -12,3 +12,4 @@
   * app.py - This is the gui app itself. This is usually ran by the nova_hub.py file.
   * nova_func - This is where I store all the globally used functions for the purpose of keeping the code neat in general.
 
+© Copyright (C) 2021 Nova Universe
