@@ -4,7 +4,9 @@
 </p>
 
 ### Nova Hub is an app that players can use to rapidly install Mod Packs for game modes on nova universe like Terra Smp. It allows for players to not worry about installing forge, optifine and all the mods required for play.
-#### Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future. NOTICE: Nova Hub is only compatible with Minecraft Launcher, if you do not have MC Launcher installed Nova Hub will fail to function properly.
+#### Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future. 
+
+#### NOTICE: Nova Hub is only compatible with Minecraft Launcher, if you do not have MC Launcher installed Nova Hub will fail to function properly.
 
 * What all the files do.
   * settings.py - Where you can make changes to the app like example the url to take the user to if he clicks on the nova universe logo.
@@ -12,5 +14,4 @@
   * app.py - This is the gui app itself. This is usually ran by the nova_hub.py file.
   * nova_func - This is where I store all the globally used functions for the purpose of keeping the code neat in general.
 
-**© Copyright (C) 2021 Nova Universe**
-**Under the [GPL-3.0 License](LICENSE)**
+**© Copyright (C) 2021 Nova Universe (Under the [GPL-3.0 License](LICENSE))**
