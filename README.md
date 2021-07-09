@@ -13,3 +13,4 @@
   * nova_func - This is where I store all the globally used functions for the purpose of keeping the code neat in general.
 
 **© Copyright (C) 2021 Nova Universe**
+**Under the [GPL-3.0 License](LICENSE)**
