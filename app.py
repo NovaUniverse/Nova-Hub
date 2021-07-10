@@ -26,7 +26,7 @@ from nova_func import *
 from nova_dir import *
 
 if not settings.option == None:
-    if not option.lower() == "dev":
+    if not (settings.option).lower() == "dev":
         import ctypes
         ctypes.windll.user32.ShowWindow( ctypes.windll.kernel32.GetConsoleWindow(), 0 ) #Hides console
 
