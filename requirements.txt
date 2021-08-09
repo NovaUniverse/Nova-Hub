@@ -1,7 +1,7 @@
 psutil==5.8.0
 colour==0.1.5
 winshell==0.6
-pywin32==300
+pywin32==301
 emoji==0.6.0
 requests==2.25.0
 pygame==2.0.1
