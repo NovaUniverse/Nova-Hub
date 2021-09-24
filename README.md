@@ -3,7 +3,7 @@
  <img src="https://user-images.githubusercontent.com/66202304/119562923-d15dcd00-bd9e-11eb-8653-589393a2b3bc.png" width="300" height="300" />
 </p>
 
-## IMPORTANT: I've chosen to temporarily discontinue Nova Hub and wouldn't recommend to download it as it won't be updated soon BUT maybe, just maybe one day I will return to the project.
+## ``IMPORTANT: I've chosen to temporarily discontinue Nova Hub and wouldn't recommend to download it as it won't be updated soon BUT maybe, just maybe one day I will return to the project.``
 
 ### Nova Hub is an app that players can use to rapidly install Mod Packs for game modes on nova universe like Terra Smp. It allows for players to not worry about installing forge, optifine and all the mods required for play.
 #### Furthermore it allows for modpacks to be automatically updated, viewing the latest news from the Nova Universe news feed, managing the minecraft clients/modpacks and even more features that will be added in the future. 
